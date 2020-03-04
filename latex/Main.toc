@@ -1,0 +1,30 @@
+\babel@toc {english}{}
+\contentsline {section}{Index of Figures}{5}{section*.4}%
+\contentsline {section}{Index of Tables}{5}{section*.5}%
+\contentsline {section}{List of Abbreviations}{6}{section*.6}%
+\contentsline {section}{\numberline {1}Introduction}{7}{section.1}%
+\contentsline {section}{\numberline {2}Theoretical Background}{8}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Formal Languages and Formal Grammars}{8}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Formal Grammars and Natural Language}{9}{subsection.2.2}%
+\contentsline {subsubsection}{\numberline {2.2.1}Natural Language as supra-regular}{9}{subsubsection.2.2.1}%
+\contentsline {subsubsection}{\numberline {2.2.2}Natural Language as supra-context-free}{10}{subsubsection.2.2.2}%
+\contentsline {subsection}{\numberline {2.3}Dyck Languages}{11}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Neural Network Architectures}{12}{subsection.2.4}%
+\contentsline {subsubsection}{\numberline {2.4.1}Simple RNN}{12}{subsubsection.2.4.1}%
+\contentsline {subsubsection}{\numberline {2.4.2}LSTM}{13}{subsubsection.2.4.2}%
+\contentsline {subsubsection}{\numberline {2.4.3}GRU}{14}{subsubsection.2.4.3}%
+\contentsline {subsection}{\numberline {2.5}Related Works}{14}{subsection.2.5}%
+\contentsline {section}{\numberline {3}Experiment Setup}{17}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Models}{17}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Corpus Construction}{17}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Evaluation}{19}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Experiment 1: Long-Range Dependency}{19}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}Experiment 2: Deeper Nesting}{20}{subsection.3.5}%
+\contentsline {section}{\numberline {4}Results}{20}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Experiment 1: Long-Range Dependency}{20}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Experiment 2: Deeper Nesting}{20}{subsection.4.2}%
+\contentsline {section}{\numberline {5}Discussion}{20}{section.5}%
+\contentsline {section}{\numberline {6}Conclusion}{20}{section.6}%
+\contentsline {section}{Bibliography}{21}{section.6}%
+\contentsline {section}{Appendix}{24}{section*.7}%
+\contentsline {section}{Eidesstattliche Erklärung}{25}{section*.8}%

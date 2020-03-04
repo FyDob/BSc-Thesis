@@ -1,0 +1,44 @@
+\section{Results}\label{ch:results}
+%While testing was done on all $81$ models, the highest accuracy for a model was often reached at a low number of hidden units, ranging from $2$ to $16$. As such, only the results of the simplest models achieving best performance will be reported. A model needs to fulfil three criteria to qualify as the best performing one.
+%\begin{enumerate}
+%\item It needs to predict opening brackets, as shown by its confusion matrix. These do not have to be accurate predictions given the target string (as explained in Section \ref{evaluation}, predicting an opening bracket is always grammatical), they just have to occur. After all, if a model never predicts an opening bracket, it cannot have learned $D_{2}$. If not a single model in an architecture learned to predict both opening brackets, the architecture is considered to have failed the task. In such a case, the results are still reported to contrast their performance with successful models. Preference is given to failed models that partially succeeded, i.e. that predict at least one opening bracket.
+%\item Once a model has fulfilled the previous condition, it needs to have achieved the highest accuracy among the successful models.
+%\item It needs to fulfil the two previous conditions with the lowest number of hidden units.
+%\end{enumerate}
+%Conditions 2 and 3 also apply to the failed models - if the most complex model does not perform any better than the simplest model, the increased complexity does not affect performance. As such, the simplest model with the highest accuracy will be reported on.
+
+\subsection{Experiment 1: Long-Range Dependency}\label{resultsLRD}
+%\begin{figure}[h]
+% 	\centering
+%	\includegraphics[width=1.\textwidth, center]{fig/ACC_BEST_LRD}
+%	\caption[Experiment 1 - Accuracy by Index]{The predicted accuracy of the best-performing model of its architecture, calculated per character index.  The baseline performance of $25\%$ is shown by the black dashed line. Note that the best High LRD and Baseline GRU models failed to learn $D_{2}$, despite their high accuracy.}
+%\label{fig:LRDAccuracyByIndex}
+%\end{figure}
+%Assessing accuracy by character index (Figure \ref{fig:LRDAccuracyByIndex}) shows several general trends: all models perform significantly above chance regardless of training corpus.
+%In all cases, accuracy seems to develop in 4 distinct phases: phase 1 (character positions $0$-$10$) shows a sharp decline. Its decline slows down in phase 2 (character positions $11$-$17/18$), where it reaches a local minimum for two characters. In phase 3, accuracy steadily improves until character position $28$. For phase 4 (character positions $29$-$38$), accuracy declines again, until it reaches a global minimum on the final two characters.
+%\begin{figure}[h]
+% 	\centering
+%	\includegraphics[width=1.\textwidth, center]{fig/LRD_overview}
+%	\caption[Experiment 1 - Confusion Matrices]{The confusion matrices of the best performing RNN models, with respect to the corpus they were trained on.}
+%\label{fig:LRDConfusionMatrices}
+%\end{figure}
+%
+%In terms of accuracy, there is no overall performance gain or loss when training on the Low LRD corpus compared to the Baseline corpus. In both cases, $5$ of $6$ models achieve $51.62\%$ accuracy. The only outlier is the GRU model, which achieves $63.71\%$ accuracy. However, as Figure \ref{fig:LRDConfusionMatrices} shows, the GRU fails to ever predict an opening bracket - the high accuracy stems from ungrammatical predictions. As such, the model is considered a failure within the scope of this thesis.
+%
+%Finally, models trained on the High LRD corpus consistently score the highest accuracy ($75.97\%$). However, none of them fulfil the confusion matrix criterion.
+
+\subsection{Experiment 2: Deeper Nesting}\label{resultsDN}
+%\begin{figure}[h]
+% 	\centering
+%	\includegraphics[width=1.\textwidth, center]{fig/ACC_BEST_ND}
+%	\caption[Experiment 2 - Accuracy by Index]{The predicted accuracy of the best-performing model of its architecture, calculated per character index. The baseline performance of $25\%$ is shown by the black dashed line. Note that the best High LRD and Baseline GRU models failed to learn $D_{2}$, despite their high accuracy.}
+%\label{fig:DNAccuracyByIndex}
+%\end{figure}
+%Similarly to Experiment 1, several trends hold true for all models when inspecting the accuracy by character index for the best performing models. First, they continue to perform well above chance in all cases. Second, accuracy develops in $3$ distinct phases for this experiment: a sharp decline from character position $5$ to $14$, followed by a slower decline until character position $23$. Finally, accuracy decreases drastically, reaching its global minimum at character position $29$ and remaining there for the final character.
+%\begin{figure}[h]
+% 	\centering
+%	\includegraphics[width=1.\textwidth, center]{fig/ND_overview}
+%	\caption[Experiment 2 - Confusion Matrices]{The confusion matrices of the best performing RNN models, respective the corpus they were trained on.}
+%\label{fig:DNConfusionMatrices}
+%\end{figure}
+%When considering the influence of training corpus properties on accuracy, the same pattern as in Experiment 1 emerges: the models trained on the Baseline or Low LRD corpus perform with equal accuracy ($34.36\%$), save for the Baseline GRU model ($50.94\%$). Again, a look at the model's confusion matrix shows it as unable to predict opening brackets at all (Figure \ref{fig:DNConfusionMatrices}). The same holds true for all models trained on the High LRD corpus. While they continue to outperform all other models in terms of accuracy (i.e. the SRNN with $8$ hidden units scores $67.40\%$), they fail the confusion matrix criterion and as such have failed to learn $D_{2}$.

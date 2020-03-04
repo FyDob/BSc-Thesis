@@ -40,7 +40,7 @@ EXP_DF = pd.read_csv('../experiment/{}.csv'.format(EXPERIMENT))
 
 # ============ PROCESSING INPUT DATA ============
 
-def preprocess_input(df, max_len_train):
+def filter_length(df, max_len_train):
 	'''Filters words of length > max_len_train out of a dataframe.
 		args:
 			df: pd.DataFrame of words
@@ -66,7 +66,7 @@ def prepare_training_data(df, max_word_length=MAX_LEN):
 			Y_train: Target values for the train split
 			Y_test: Target values for the test split
 			tok: Tokenizer fitted on training corpus, to be used on experiment corpus'''
-	df = preprocess_input(df, max_word_length)
+	df = filter_length(df, max_word_length)
 	X = df.word
 	Y = df.value
 	# Encode target values
@@ -88,7 +88,7 @@ def prepare_training_data(df, max_word_length=MAX_LEN):
 	
 # def prepare_training_data_NOSPLIT(dataframe, max_word_length):
 	'''Prepares training data without a train_test_split.'''
-	# df = preprocess_input(dataframe, max_word_length)
+	# df = filter_length(dataframe, max_word_length)
 	# X = df.word
 	# Y = df.value
 	# le = LabelEncoder()
@@ -115,7 +115,7 @@ def prepare_experiment_data(dataframe, tok, max_word_length=MAX_LEN):
 		returns:
 			X: Preprocessed words
 			Y: Target values'''
-	df = preprocess_input(dataframe, max_word_length)
+	df = filter_length(dataframe, max_word_length)
 	X_temp = df.word
 	Y = df.value
 	# Encode target values.

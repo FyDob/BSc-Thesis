@@ -1,0 +1,84 @@
+%TODO put Experiments and classification explanation in the beginning
+\section{Experiment Setup}\label{ch:experimentSetup}
+\subsection{Models}\label{models}
+For the following experiments, the three RNN architectures described in Section \ref{neuralNetworkArchitectures} have been used. All models consist of an embedding layer, a single layer of size $n = \lbrace 2^{1}, 2^{2}, \dots, 2^{n} \rbrace$ and a dense layer of size $1$ with sigmoid activation. The activation value of the neuron in the dense layer acts as the output of the model: a value $\geq 0.5$ means the model classified the input as a correct word. The models were implemented in Tensorflow 2.0.\footnote{The source code can be found at \url {https://github.com/FyDob/BSc-Thesis}.}
+
+All models were trained with the same parameters. The training data was received one word at a time, in batches of $512$. The loss was computed by binary cross-entropy, as is current standard for binary classification tasks. Furthermore, the Adam optimizer (\cite{Kingma2014}) was applied with a learning rate of $0.0001$. At the end of a training epoch, the models were evaluated for loss and accuracy on a validation set of $120{,}000$ words. The models were trained until their loss on the validation set did not lower by more than $0.0001$ for three consecutive epochs or for at most $100$ epochs. The models with the lowest validation loss were used for all experiments.
+
+The models were trained on the same training data for both experiments. To answer the question of training data influence on model performance, three distinct sets of training data were used, yielding a total of $9 \times 3 \times 3 = 81$ (number of different hidden units $\times$ number of training corpora $\times$ number of different architectures) evaluated models.
+
+\subsection{Corpus Construction}\label{corpusConstruction}
+To investigate the influence of corpus composition on model performance, three corpora were created: a baseline corpus which is directly sampled from a subset of $D_{2}$, as well as two modifications of the baseline corpus: one impoverishing the training data from long-range dependencies (Low LRD) and one enriching the training data with more long-range dependencies (High LRD). The sampling and modification processes will be explained later in this section.
+
+The experiments were explicitly designed to test the models' abilities to generalize based on the training data they encounter. As such, it is prudent to give consideration to which properties the training data might possess to facilitate or inhibit generalizability - properties such as length, maximum nesting depth (ND) and the maximum distance between a pair of opening and closing brackets (BD). ND is, in this case, defined as the highest number of unresolved open brackets preceding an open bracket in a given word (i.e. in the word \texttt{\{[\{\}]\}}, the square open bracket is at ND$=1$, and the curly open bracket is at ND$=2$, making the maximum ND of the word $2$). Maximum BD, then, is the highest number of characters between a pair of brackets in a word. In the previous example word, the maximum BD would be $4$. These measures are reported in Table \ref{tab:Corpora} in terms of averages and variance.
+
+%TODO Measure corpora
+%\begin{table}
+%	\begin{tabularx}{\textwidth}{@{}l*{10}{C}c@{}}
+%		\toprule 		
+%		\textit{Corpus} & \textit{Word Length} & \textit{maxND} & \textit{maxBD} \\ 
+%		\toprule 
+%		Baseline & $18.37$ ($6.36$) & $4.31$ ($1.22$) & $13.00$ ($16.02$) \\
+%		High LRD & $18.67$ ($4.75$) & $5.12$ ($1.04$) & $16.67$ ($4.75$) \\
+%		Low LRD & $17.54$ ($8.04$) & $3.92$ ($0.98$) & $10.58$ ($9.02$) \\
+%		\bottomrule
+%	\end{tabularx}
+%	\caption[Training corpora properties]{Properties of the three corpora the models were trained on, reported in averages (variance in brackets).}
+%	\label{tab:Corpora}
+%\end{table}
+
+Furthermore, the training corpora were chosen to be a small slice of a comparatively large subset of $D_{2}$. To facilitate generalization, the training corpora consist of words of varying length. As discussed in Section \ref{relatedWorks}, previous works largely utilized similarly small language subsets and achieved encouraging results. For a discussion of Experiment $1$ and $2$ on a training corpus consisting of a majority of the target language, see \cite{Bernardy2018}.
+
+In determining an eligible maximum length, a known fact about the size of $D_{n}$ subsets was utilized: a Dyck language $D_{n}$ contains $n^mC_{m}$ words of length $2m$, where $C_{m}$ is the $m$-th Catalan number (\cite{Skachkova2018}). It follows that a maximum length limit of $2m$ produces a set of size $\sum_{i=2}^{2m}n^{i}C_{i}$. For example, a maximum length of 20 in $D_{2}$ ($D_{2}^{\leq 20}$) yields $20{,}119{,}506$ words, which is a sufficiently large subset to sample from. The words were generated following the probabilistic grammar set forth by \cite{Sennhauser2018}.
+\begin{align*}
+	S &\rightarrow Z \; S \; \vert \; Z \\
+	Z &\rightarrow B \; \vert \; T \\
+	B &\rightarrow [ \; S \; ] \; \vert \; \lbrace \; S \; \rbrace \\
+	T &\rightarrow [ \; ] \; \vert \; \lbrace \; \rbrace
+\end{align*}
+The production $Z \rightarrow B$ branches, whereas $S \rightarrow Z \; S$ concatenates two smaller Dyck words. This representation provides a good intuition for understanding the merit of Experiment 1. The probabilities with which the rules were applied are calculated as follows, with alternative rules of course being applied with the complementary probability:
+\begin{align*}
+	P_{\text{branch}} &= r_{\text{branch}} \cdot s(l) \quad \text{with } r_{\text{branch}} \sim U(0.7,1.0) \\
+	P_{\text{concat}} &= r_{\text{concat}} \cdot s(l) \quad \text{with } r_{\text{concat}} \sim U(0.7,1.0) \\
+	s(l) &= \min(1, -3 \cdot \frac{l}{n} + 3)
+\end{align*}
+with $l$ being the number of already generated non-terminal characters and $n$ the maximally desired length of the word. $r_{\text{branch}}$, $r_{\text{concat}}$ and $l$ were sampled at every step of word generation.
+
+Following this process, $500{,}000$ words in $D_{2}^{\leq 20}$ were generated. These words served as the basis for creating the three corpora. To create the Low LRD corpus, all words with a maximum bracket distance higher than $10$ were modified\footnote{This cut-off point was chosen as it significantly reduces the average maximum bracket distance without creating too many duplicates.} by first identifying the bracket pair with the highest bracket distance, then simply moving the opening bracket from its original position to the position right before the closing bracket. (i.e. \texttt{\{[\{\}]\}} becomes \texttt{[\{\}]\{\}}). This has the largest impact on bracket distance throughout the corpus, while ensuring grammaticality of the resulting word. The resulting set of long-range impoverished words was merged with all unmodified words, deleting all duplicates.
+
+The High LRD corpus was created in a similar way: First, all words with a bracket distance lower than $19$ were identified.\footnote{The same considerations as for the Low LRD corpus cut-off apply.} Then, the first pair of neighbouring closing brackets is found and deleted. The remaining word is wrapped in a randomly chosen pair of brackets, creating the longest possible bracket distance between the two (i.e. \texttt{\{[\{\}]\}} becomes \texttt{\{\{[]\}\}}). The resulting set was merged with the unmodified words the same way as the Low LRD set.
+
+Finally, the corpora were filled with $500{,}000$ non-words obtained by corrupting the correct words in $D_{2}^{\leq 20}$. For one half of the words, a random opening bracket was replaced with a random closing bracket, while a random closing bracket was replaced with a random opening bracket for the other half.
+
+In total, all corpora consist of $1{,}000{,}000$ samples, of which $50\%$ are incorrect.
+\subsection{Evaluation}\label{evaluation}
+Generating the words for the two experiments follow the procedure described by \cite{Bernardy2018}. Whereas the research put forth in his paper scrutinized the generative abilities of RNNs, I am investigating the models in a classification task.
+
+%The two experiments as well as their evaluation closely follows the procedure described by \cite{Bernardy2018}. As he notes, it is indeed impossible to achieve a full $100\%$ accuracy on prediction tasks for Dyck languages. This is owed to the fact that at any position within a word, the valid options for the next character encompasses all opening brackets in addition to whichever closing bracket might be appropriate (i.e. the sequence \texttt{[[\{\}]} can be followed by either \texttt{]}, \texttt{\{} or \texttt{[}). Indeed, this makes deciding how to score accuracy for the following experiments rather difficult. Obviously, an assessment of accuracy only ever makes sense when the next character in the test word is a closing bracket - as long as there is no prescribed limit to the length of a Dyck word, opening brackets are never a wrong prediction. But how to score accuracy on the position of the closing bracket? Either, one only assesses the correct closing bracket as the one correct prediction, or one allows all predictions except the wrong closing bracket and the end-of-word marker to be seen as correct.
+%
+%In a series of experiments designed to assess how well - if at all - neural network models can learn the underlying grammar of a training corpus, choosing the first option seems counter-intuitive. After all, predicting an opening bracket instead of the expected closing bracket could be an indication for appropriate rule application. However, accepting all open bracket predictions to be correct does not contribute to an accurate assessment of grammaticality either: Once the model has predicted an opening bracket in place of a closing bracket, it is assuming a structurally very different word than is actually present in the test set. This predicted word would have a deeper nesting depth and a longer-running range dependency than the test word. Still, foregoing a constraint on accuracy would unduly inflate performance with respect to the test set. As such, an additional measure will be reported: the model's associated confusion matrix. This will grant insight into which predictions the model is capable of making.
+%
+%The following accuracy calculation holds for all experiments If, and only if the next character in the test word is a closing bracket will the model's prediction be evaluated. If the model predicted the correct closing bracket, it has made a correct prediction. Every other prediction is rated as false. As such, the model accuracy by character index is calculated as follows:
+%\[
+%	\text{acc}_{i} = \frac{\text{\# of correct predictions up to index }i}{\text{\# of closing brackets up to index }i}
+%\]
+%A random guessing strategy choosing from all brackets in the alphabet yields a baseline $25\%$ accuracy. A perfect predictor, then, could score $100\%$ if it both perfectly resolves all opening and closing bracket dependencies and never predicts an open bracket instead of a closed one.
+%This indeed would make a $100\%$ accuracy both undesirable and puzzling - and an indication that the model has not actually learned a generalizable grammar resembling $D_{2}$. In reality, a prefect predictor that has learned $D_{2}$ should score around $33.33\%$ accuracy. The remaining $66.66\%$ are split equally on the two opening brackets.
+
+\subsection{Experiment 1: Long-Range Dependency}\label{LRD}
+%TODO Proper number, mention negatives, proper length
+%For this experiment, the test set consisted of $512 \times 17$ Dyck words with length $1+18+18+1=38$. They were created by picking two random Dyck words $w_{1}, w_{2} \in D_{2}^{=18}$ from the previously generated $140{,}000$ words $\in D_{2}^{\leq 20}$, concatenating them and wrapping the result in a randomly selected pair of matching brackets as follows:
+\[
+	w_{\text{LRD}} = O_{n}w_{1}w_{2}C_{n}
+\]
+While $w_{1}$ and $w_{2}$ might have been seen in training, the resulting word most certainly has not been observed. Neither could the model possibly have encountered a long-range dependency spanning $36$ characters between the opening and closing bracket. As such, a high accuracy on the final character of the word serves as a strong indication for the model having not just learned the necessity of closing open brackets to form an acceptable Dyck word, but also for the model having retained information on the first opening bracket during all processing steps. For further insight in model behaviour, the accuracy is reported for every processed character.
+
+\subsection{Experiment 2: Deeper Nesting}\label{DN}
+%TODO Proper number, mention negatives, proper length
+To investigate how well a model performs on predicting brackets on a nesting level deeper than anything included in training, another test set was constructed. Since Experiment 1 already investigates Long-Range Dependency (LRD), this corpus was designed so its results are influenced as little as possible by LRD performance.
+
+%For this task, $512 \times 17$ words $w \in D_{2}^{=20}$ have been chosen at random. They were then wrapped by a prefix of five randomly chosen opening brackets and a suffix of the corresponding closing brackets as follows:
+\[
+	w_{\text{DN}} = O_{n}O_{n}O_{n}O_{n}O_{n}wC_{n}C_{n}C_{n}C_{n}C_{n}
+\]
+This process still has the model extrapolate beyond the length of the training words, while increasing all present nesting depths by 5. Indeed, when analysing the results, the main focus lies on the infixed word, since all its nesting depths are now increased by 5, possibly affecting model performance.
