@@ -1,0 +1,29 @@
+Creating Base...
+Corrupting...
+ === BASE ===
+Correct Incorrect O     Incorrect C
+1180001 1172519 1172519
+Size    Avg Length       Avg MaxNestDepth        Avg MaxBrackDist
+1000000 $18.57$ ($3.38$) & $4.15$ ($1.68$) & $11.72$ ($19.76$)
+High LRD...
+Corrupting...
+ === HIGH LRD ===
+Correct Incorrect O     Incorrect C
+935166  927732  927569
+Size    Avg Length       Avg MaxNestDepth        Avg MaxBrackDist
+1000000 $18.96$ ($2.31$) & $5.04$ ($1.55$) & $16.96$ ($2.31$)
+Low LRD...
+Corrupting...
+ === LOW LRD ===
+Correct Incorrect O     Incorrect C
+1065279 1057317 1057341
+Size    Avg Length       Avg MaxNestDepth        Avg MaxBrackDist
+1000000 $18.68$ ($3.19$) & $3.61$ ($1.20$) & $8.55$ ($12.33$)
+Creating LRD...
+ === LRD ===
+Correct Incorrect O     Incorrect C
+1671365 1671365 1671365
+Creating ND...
+ === ND ===
+Correct Incorrect O     Incorrect C
+2902727 2902434 2902457

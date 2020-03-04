@@ -1,0 +1,2 @@
+model_checkpoint_path: "ckpt_30-0.0100-0.9992-0.0100-0.9989"
+all_model_checkpoint_paths: "ckpt_30-0.0100-0.9992-0.0100-0.9989"
