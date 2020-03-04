@@ -1,2 +1,2 @@
 # ignore detailed results (classification per word)
-**/exp_results/detail_*.csv
+/exp_results/**/detail_*.csv
