@@ -44,7 +44,7 @@ for corpus in corpora:
 				epoch, train_loss, train_acc, val_loss, val_acc = read_checkpoint(file)
 				#print(epoch, train_loss, train_acc, val_loss, val_acc)
 				df = pd.read_csv(os.path.join(directory, filename),delimiter=',')
-				df['Val_Acc'], df['Val_Loss'], df['Train_Acc'], df['Train_Loss'], df['Epoch'], df['Network'], df['Experiment'], df['Corpus']  = val_acc, val_loss, train_acc, train_loss, epoch, network, experiment, corpus
+				df['Val_Acc'], df['Val_Loss'], df['Train_Acc'], df['Train_Loss'], df['Epoch'], df['Network'], df['Experiment'], df['Corpus'], df['Hidden_Units']  = val_acc, val_loss, train_acc, train_loss, epoch, network, experiment, corpus, hidden_units
 				single_frames.append(df)
 				
 # Join all small dfs into the complete overview of all results
