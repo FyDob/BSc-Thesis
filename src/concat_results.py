@@ -11,7 +11,6 @@ def read_checkpoint(ckpt_file):
 	'''Reads 'checkpoint' file for epoch, train_loss, train_acc, val_loss and val_acc of the lowest val_loss model.
 		args:
 			ckpt_file: Path to the 'checkpoint' file
-		
 		returns:
 			epoch: Epoch of the lowest val_loss model
 			train_loss: Loss on training data of the lowest val_loss model

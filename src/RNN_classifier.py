@@ -59,7 +59,6 @@ def prepare_training_data(df, max_word_length=MAX_LEN):
 		args:
 			df: pd.DataFrame of words
 			max_word_length: Maximum wanted length of words
-			
 		returns:
 			X_train: Preprocessed words for the train split
 			X_test: Preprocessed words for the test split
@@ -110,8 +109,7 @@ def prepare_experiment_data(dataframe, tok, max_word_length=MAX_LEN):
 		args:
 			df: pd.DataFrame of words
 			max_word_length: Maximum wanted length of words
-			tok: Tokenizer as fitted on the training corpus
-			
+			tok: Tokenizer as fitted on the training corpus	
 		returns:
 			X: Preprocessed words
 			Y: Target values'''
@@ -164,7 +162,6 @@ def train_model(X, Y, checkpoint_dir=CHECKPOINT_DIR):
 			Y: Target values
 			hidden_units: Number of hidden units in the LSTM, GRU or SRNN layer
 			corpus: Name of the training corpus
-		
 		returns:
 			model: Trained model
 	'''
@@ -216,10 +213,9 @@ def train_test():
 	'''Trains and tests the model with a train_test_split. Saves the accuracy and loss on the test data in a file with name '{NETWORK}_{HIDDEN_UNITS}.csv'.
 	Overwrites 'checkpoint' file TF2.0 uses to store the name of the latest saved weights file with the name of the lowest val_loss weights file.
 		args:
-			None
-			
+			none
 		returns:
-			None'''
+			none'''
 	#X_train, Y_train, tokenizer = prepare_training_data_NOSPLIT(CORPUS_DF, max_word_length) #len8 experiment
 	# Preprocessing
 	X_train, X_test, Y_train, Y_test, tokenizer = prepare_training_data(CORPUS_DF)
@@ -256,7 +252,6 @@ def run_experiment(max_word_length=MAX_LEN, checkpoint_dir=CHECKPOINT_DIR):
 			corpus: Name of the training corpus
 			network: Name of network architecture
 			hidden_units: Number of hidden units in the LSTM, GRU or SRNN layer
-			
 		returns:
 			None'''	
 	# Building model and assigning the weights of the model specified in its checkpoint file: model with the lowest val_loss
