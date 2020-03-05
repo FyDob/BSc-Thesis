@@ -1,5 +1,3 @@
-%TODO which models qualified, i.e. scored 100% on the validation set?
-%TODO Measure training corpora
 \section{Experiment Setup}\label{ch:experimentSetup}
 \subsection{Evaluation}\label{evaluation}
 Generating the words for the two experiments follows the procedure described by \cite{Bernardy2018} and will be explained in depth in the coming sections. Whereas the research put forth in his paper scrutinized the generative abilities of RNNs, I am investigating the models performing a classification task. As such, my training, test, validation and experiment data all consist of the same $1{:}1$ ratio of correct-to-incorrect words. Within the incorrect words, a distinction between superfluous opening or closing brackets is made, also at a ratio of $1{:}1$.
@@ -18,20 +16,19 @@ To investigate the influence of corpus composition on model performance, three c
 
 The experiments were explicitly designed to test the models' abilities to generalize based on the training data they encounter. As such, it is prudent to give consideration to which properties the training data might possess to facilitate or inhibit generalizability - properties such as length, maximum nesting depth (ND) and the maximum distance between a pair of opening and closing brackets (BD). ND is, in this case, defined as the highest number of unresolved open brackets preceding an open bracket in a given word (i.e. in the word \texttt{\{[\{\}]\}}, the square open bracket is at ND$=1$, and the curly open bracket is at ND$=2$, making the maximum ND of the word $2$). Maximum BD, then, is the highest number of characters between a pair of brackets in a word. In the previous example word, the maximum BD would be $4$. These measures are reported in Table \ref{tab:Corpora} in terms of averages and variance.
 
-%TODO Measure corpora
-%\begin{table}
-%	\begin{tabularx}{\textwidth}{@{}l*{10}{C}c@{}}
-%		\toprule 		
-%		\textit{Corpus} & \textit{Word Length} & \textit{maxND} & \textit{maxBD} \\ 
-%		\toprule 
-%		Baseline & $18.37$ ($6.36$) & $4.31$ ($1.22$) & $13.00$ ($16.02$) \\
-%		High LRD & $18.67$ ($4.75$) & $5.12$ ($1.04$) & $16.67$ ($4.75$) \\
-%		Low LRD & $17.54$ ($8.04$) & $3.92$ ($0.98$) & $10.58$ ($9.02$) \\
-%		\bottomrule
-%	\end{tabularx}
-%	\caption[Training corpora properties]{Properties of the three corpora the models were trained on, reported in averages (variance in brackets).}
-%	\label{tab:Corpora}
-%\end{table}
+\begin{table}
+	\begin{tabularx}{\textwidth}{@{}l*{10}{C}c@{}}
+		\toprule 		
+		\textit{Corpus} & \textit{Word Length} & \textit{maxND} & \textit{maxBD} \\ 
+		\toprule 
+		Baseline & $18.37$ ($6.36$) & $4.31$ ($1.22$) & $13.00$ ($16.02$) \\
+		High LRD & $18.67$ ($4.75$) & $5.12$ ($1.04$) & $16.67$ ($4.75$) \\
+		Low LRD & $17.54$ ($8.04$) & $3.92$ ($0.98$) & $10.58$ ($9.02$) \\
+		\bottomrule
+	\end{tabularx}
+	\caption[Training corpora properties]{Properties of the three corpora the models were trained on, reported in averages (variance in brackets).}
+	\label{tab:Corpora}
+\end{table}
 
 Furthermore, the training corpora were chosen to be a small slice of a comparatively large subset of $D_{2}$. To facilitate generalization, the training corpora consist of words of varying length. As discussed in Section \ref{relatedWorks}, previous works largely utilized similarly small language subsets and achieved encouraging results. For a discussion of Experiment $1$ and $2$ on a training corpus consisting of a majority of the target language, see \cite{Bernardy2018}.
 
