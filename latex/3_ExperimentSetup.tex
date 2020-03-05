@@ -1,5 +1,11 @@
-%TODO put Experiments and classification explanation in the beginning
+%TODO which models qualified, i.e. scored 100% on the validation set?
+%TODO Measure training corpora
 \section{Experiment Setup}\label{ch:experimentSetup}
+\subsection{Evaluation}\label{evaluation}
+Generating the words for the two experiments follows the procedure described by \cite{Bernardy2018} and will be explained in depth in the coming sections. Whereas the research put forth in his paper scrutinized the generative abilities of RNNs, I am investigating the models performing a classification task. As such, my training, test, validation and experiment data all consist of the same $1{:}1$ ratio of correct-to-incorrect words. Within the incorrect words, a distinction between superfluous opening or closing brackets is made, also at a ratio of $1{:}1$.
+
+As such, a random guessing strategy would yield a baseline accuracy of $50\%$. A model is considered as having learned useful features from the training data if it scores above the baseline accuracy in the experiments. Furthermore, if the model has learned the underlying grammar of $D_{2}$, there should be no difference in accuracy for the two classes of incorrect words, as both of them do not belong to $D_{2}$, regardless of which bracket is replaced.
+
 \subsection{Models}\label{models}
 For the following experiments, the three RNN architectures described in Section \ref{neuralNetworkArchitectures} have been used. All models consist of an embedding layer, a single layer of size $n = \lbrace 2^{1}, 2^{2}, \dots, 2^{n} \rbrace$ and a dense layer of size $1$ with sigmoid activation. The activation value of the neuron in the dense layer acts as the output of the model: a value $\geq 0.5$ means the model classified the input as a correct word. The models were implemented in Tensorflow 2.0.\footnote{The source code can be found at \url {https://github.com/FyDob/BSc-Thesis}.}
 
@@ -51,34 +57,23 @@ The High LRD corpus was created in a similar way: First, all words with a bracke
 Finally, the corpora were filled with $500{,}000$ non-words obtained by corrupting the correct words in $D_{2}^{\leq 20}$. For one half of the words, a random opening bracket was replaced with a random closing bracket, while a random closing bracket was replaced with a random opening bracket for the other half.
 
 In total, all corpora consist of $1{,}000{,}000$ samples, of which $50\%$ are incorrect.
-\subsection{Evaluation}\label{evaluation}
-Generating the words for the two experiments follow the procedure described by \cite{Bernardy2018}. Whereas the research put forth in his paper scrutinized the generative abilities of RNNs, I am investigating the models in a classification task.
-
-%The two experiments as well as their evaluation closely follows the procedure described by \cite{Bernardy2018}. As he notes, it is indeed impossible to achieve a full $100\%$ accuracy on prediction tasks for Dyck languages. This is owed to the fact that at any position within a word, the valid options for the next character encompasses all opening brackets in addition to whichever closing bracket might be appropriate (i.e. the sequence \texttt{[[\{\}]} can be followed by either \texttt{]}, \texttt{\{} or \texttt{[}). Indeed, this makes deciding how to score accuracy for the following experiments rather difficult. Obviously, an assessment of accuracy only ever makes sense when the next character in the test word is a closing bracket - as long as there is no prescribed limit to the length of a Dyck word, opening brackets are never a wrong prediction. But how to score accuracy on the position of the closing bracket? Either, one only assesses the correct closing bracket as the one correct prediction, or one allows all predictions except the wrong closing bracket and the end-of-word marker to be seen as correct.
-%
-%In a series of experiments designed to assess how well - if at all - neural network models can learn the underlying grammar of a training corpus, choosing the first option seems counter-intuitive. After all, predicting an opening bracket instead of the expected closing bracket could be an indication for appropriate rule application. However, accepting all open bracket predictions to be correct does not contribute to an accurate assessment of grammaticality either: Once the model has predicted an opening bracket in place of a closing bracket, it is assuming a structurally very different word than is actually present in the test set. This predicted word would have a deeper nesting depth and a longer-running range dependency than the test word. Still, foregoing a constraint on accuracy would unduly inflate performance with respect to the test set. As such, an additional measure will be reported: the model's associated confusion matrix. This will grant insight into which predictions the model is capable of making.
-%
-%The following accuracy calculation holds for all experiments If, and only if the next character in the test word is a closing bracket will the model's prediction be evaluated. If the model predicted the correct closing bracket, it has made a correct prediction. Every other prediction is rated as false. As such, the model accuracy by character index is calculated as follows:
-%\[
-%	\text{acc}_{i} = \frac{\text{\# of correct predictions up to index }i}{\text{\# of closing brackets up to index }i}
-%\]
-%A random guessing strategy choosing from all brackets in the alphabet yields a baseline $25\%$ accuracy. A perfect predictor, then, could score $100\%$ if it both perfectly resolves all opening and closing bracket dependencies and never predicts an open bracket instead of a closed one.
-%This indeed would make a $100\%$ accuracy both undesirable and puzzling - and an indication that the model has not actually learned a generalizable grammar resembling $D_{2}$. In reality, a prefect predictor that has learned $D_{2}$ should score around $33.33\%$ accuracy. The remaining $66.66\%$ are split equally on the two opening brackets.
 
 \subsection{Experiment 1: Long-Range Dependency}\label{LRD}
-%TODO Proper number, mention negatives, proper length
-%For this experiment, the test set consisted of $512 \times 17$ Dyck words with length $1+18+18+1=38$. They were created by picking two random Dyck words $w_{1}, w_{2} \in D_{2}^{=18}$ from the previously generated $140{,}000$ words $\in D_{2}^{\leq 20}$, concatenating them and wrapping the result in a randomly selected pair of matching brackets as follows:
+For this experiment, the test set consisted of $1{,}000{,}000$ samples of length $1+18+18+1=38$, half of which were correct Dyck words. They were created by picking two random Dyck words $w_{1}, w_{2} \in D_{2}^{=18}$ from the base corpus, concatenating them and wrapping the result in a randomly selected pair of matching brackets as follows:
 \[
 	w_{\text{LRD}} = O_{n}w_{1}w_{2}C_{n}
 \]
-While $w_{1}$ and $w_{2}$ might have been seen in training, the resulting word most certainly has not been observed. Neither could the model possibly have encountered a long-range dependency spanning $36$ characters between the opening and closing bracket. As such, a high accuracy on the final character of the word serves as a strong indication for the model having not just learned the necessity of closing open brackets to form an acceptable Dyck word, but also for the model having retained information on the first opening bracket during all processing steps. For further insight in model behaviour, the accuracy is reported for every processed character.
+To generate incorrect samples, the generated correct LRD words were corrupted in the same way as for the training corpora, yielding $250{,}000$ incorrect LRD words with a superfluous opening or closing bracket each.
+
+While $w_{1}$ and $w_{2}$ might have been seen in training (for models trained on the base corpus), the resulting word most certainly has not been observed. Neither could the model possibly have encountered a long-range dependency spanning $36$ characters between the opening and closing bracket. As such, a high classification accuracy serves as a strong indication of the model having learned to generalize to longer, non-concatenated Dyck words.\footnote{While the infixed sub-words are indeed concatenated, $w_{\text{LRD}}$ cannot be created by concatenating two shorter words due to being wrapped by a matching bracket pair.} I report model performance on Experiment 1 in terms of accuracy, precision, recall and F1 score.
 
 \subsection{Experiment 2: Deeper Nesting}\label{DN}
-%TODO Proper number, mention negatives, proper length
-To investigate how well a model performs on predicting brackets on a nesting level deeper than anything included in training, another test set was constructed. Since Experiment 1 already investigates Long-Range Dependency (LRD), this corpus was designed so its results are influenced as little as possible by LRD performance.
+To investigate how well a model performs on predicting brackets on a nesting level deeper than anything included in training, another test set was constructed. Since Experiment 1 already investigates Long-Range Dependency (LRD), this corpus was designed so its results are confounded as little as possible by LRD performance.
 
-%For this task, $512 \times 17$ words $w \in D_{2}^{=20}$ have been chosen at random. They were then wrapped by a prefix of five randomly chosen opening brackets and a suffix of the corresponding closing brackets as follows:
+For this task, the test set consisted of  $1{,}000{,}000$ samples of length $30$, half of which were correct Dyck words. First, $500,000$  correct words were chosen at random from the base corpus. Then, they were wrapped by a prefix of five randomly chosen opening brackets and a suffix of the corresponding closing brackets as follows:
 \[
 	w_{\text{DN}} = O_{n}O_{n}O_{n}O_{n}O_{n}wC_{n}C_{n}C_{n}C_{n}C_{n}
 \]
-This process still has the model extrapolate beyond the length of the training words, while increasing all present nesting depths by 5. Indeed, when analysing the results, the main focus lies on the infixed word, since all its nesting depths are now increased by 5, possibly affecting model performance.
+Generation of incorrect samples was done in accordance to Experiment 1 and corpus creation.
+
+This process still has the model extrapolate beyond the length of the training words, while increasing all present nesting depths by $5$. This is analogous to center embedding in natural language - processing increasing nesting levels is more complicated than processing a flat structure. A high classification accuracy in Experiment 2 indicates a capability to generalize to repeated application of grammar rules beyond what was seen in the training set. As such, it implies an understanding of the $D_{2}$ grammar. I report model performance on Experiment 2 in terms of accuracy, precision, recall and F1 score.
