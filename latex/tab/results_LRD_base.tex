@@ -1,8 +1,9 @@
-\begin{tabular}{lrrrrr}
+\begin{table}
+\begin{tabularx}{\textwidth}{@{}l*{10}{C}c@{}}
 \toprule
-  network &  accuracy &  precision &  recall &  f1\_score &  val\_acc \\
+  \textit{Network} &  \textit{Accuracy} &  \textit{Precision} &  \textit{Recall} &  \textit{F1 Score} &  \textit{Val Acc} \\
 \midrule
-    GRU-2 &     0.890 &      0.982 &   0.794 &     0.878 &    0.995 \\
+    GRU-2 &     0.890 &      \textbf{0.982} &   0.794 &     0.878 &    0.995 \\
     GRU-4 &     0.487 &      0.413 &   0.060 &     0.105 &    1.000 \\
     GRU-8 &     0.488 &      0.331 &   0.023 &     0.043 &    1.000 \\
    GRU-16 &     0.550 &      0.713 &   0.168 &     0.272 &    1.000 \\
@@ -13,21 +14,31 @@
   GRU-512 &     0.500 &      0.487 &   0.007 &     0.015 &    1.000 \\
    LSTM-2 &     0.500 &      0.000 &   0.000 &     0.000 &    0.999 \\
    LSTM-4 &     0.451 &      0.000 &   0.000 &     0.000 &    1.000 \\
-   LSTM-8 &     0.910 &      0.959 &   0.857 &     0.905 &    1.000 \\
+   LSTM-8 &     \textbf{0.910} &      0.959 &   \textbf{0.857} &     \textbf{0.905} &    \textbf{1.000} \\
   LSTM-16 &     0.343 &      0.001 &   0.000 &     0.000 &    1.000 \\
   LSTM-32 &     0.500 &      0.000 &   0.000 &     0.000 &    1.000 \\
   LSTM-64 &     0.505 &      0.596 &   0.030 &     0.057 &    1.000 \\
  LSTM-128 &     0.347 &      0.001 &   0.000 &     0.000 &    1.000 \\
  LSTM-256 &     0.455 &      0.128 &   0.016 &     0.028 &    1.000 \\
  LSTM-512 &     0.499 &      0.468 &   0.009 &     0.017 &    0.991 \\
-   SRNN-2 &     0.465 &      0.357 &   0.087 &     0.140 &    0.750 \\
-   SRNN-4 &     0.488 &      0.334 &   0.023 &     0.043 &    1.000 \\
-   SRNN-8 &     0.461 &      0.037 &   0.003 &     0.006 &    1.000 \\
-  SRNN-16 &     0.272 &      0.021 &   0.010 &     0.014 &    1.000 \\
+   SRNN-2 &     $0.465$ &      0.357 &   0.087 &     0.140 &    \textit{0.750} \\
+   SRNN-4 &     $0.488$ &      0.334 &   0.023 &     0.043 &    1.000 \\
+   SRNN-8 &     $0.461$ &      0.037 &   0.003 &     0.006 &    1.000 \\
+  SRNN-16 &     $\textit{0.272}$ &      0.021 &   0.010 &     0.014 &    1.000 \\
   SRNN-32 &     0.498 &      0.492 &   0.141 &     0.219 &    1.000 \\
   SRNN-64 &     0.504 &      0.505 &   0.366 &     0.424 &    1.000 \\
  SRNN-128 &     0.484 &      0.040 &   0.001 &     0.003 &    1.000 \\
  SRNN-256 &     0.503 &      0.503 &   0.455 &     0.478 &    1.000 \\
  SRNN-512 &     0.484 &      0.017 &   0.001 &     0.001 &    1.000 \\
+ \midrule
+ \midrule
+ \textbf{Mean} & 0.503 & 0.339 & 0.132 & 0.163 & 0.990 \\
+ \textbf{Variance} & 0.130 & 0.294 & 0.233 & 0.253 & 0.048 \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
+\caption[Base LRD trained network performance on experiment 1]{Performance measures for experiment 1 of all networks that were trained on the base LRD corpus.}
+\label{tab:perf_LRDbase}
+\end{table}
+%\end%{tabularx}
+%\caption[]{}
+%\label{tab:perf}
