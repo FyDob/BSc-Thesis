@@ -4,8 +4,11 @@
 import os
 import pandas as pd
 
-corpora = ['high','base','low']
-experiments = ['ND','LRD']
+CORPORA = ['high','base','low']
+EXPERIMENTS = ['ND','LRD']
+OUTPATH_CSV = os.path.join('..', 'results')
+OUTPATH_LATEX = os.path.join('..', 'latex', 'tab')
+PERFORMANCE_COLUMNS = ['network', 'accuracy', 'precision', 'recall', 'f1_score', 'val_acc']
 
 def read_checkpoint(ckpt_file):
 	'''Reads 'checkpoint' file for epoch, train_loss, train_acc, val_loss and val_acc of the lowest val_loss model.
@@ -30,30 +33,60 @@ def read_checkpoint(ckpt_file):
 		
 
 # Collect all results across all corpora and experiments in a list of pd.DataFrames
-single_frames = []
-for corpus in corpora:
-	for experiment in experiments:
-		directory = os.path.join('..', 'exp_results', corpus, experiment)
-		dirs = os.listdir(directory)
-		for filename in dirs:
-			if not filename.startswith('detail_'):
-				network, hidden_units = filename[:-4].split('_')
-				model_directory = os.path.join('..', 'saved_models', corpus, network, hidden_units)
-				models = os.listdir(model_directory)
-				file = os.path.join(model_directory, models[0])
-				epoch, train_loss, train_acc, val_loss, val_acc = read_checkpoint(file)
-				#print(epoch, train_loss, train_acc, val_loss, val_acc)
-				df = pd.read_csv(os.path.join(directory, filename),delimiter=',')
-				df['Val_Acc'], df['Val_Loss'], df['Train_Acc'], df['Train_Loss'], df['Epoch'], df['Network'], df['Experiment'], df['Corpus'], df['Hidden_Units']  = val_acc, val_loss, train_acc, train_loss, epoch, network, experiment, corpus, hidden_units
-				single_frames.append(df)
-				
-# Join all small dfs into the complete overview of all results
-results = pd.concat(single_frames, ignore_index=True)
-results = results.rename(str.lower, axis='columns')
-results = results.sort_values(by='accuracy', ascending=False)
-outpath = os.path.join('..', 'results')
-try:
-	os.makedirs(outpath)
-except:
-	print("Directory {} exists, proceeding.".format(outpath))
-results.to_csv(os.path.join(outpath, 'results.csv'), index=False)
+def create_results(corpora=CORPORA, experiments=EXPERIMENTS):
+	single_frames = []
+	for corpus in corpora:
+		for experiment in experiments:
+			directory = os.path.join('..', 'exp_results', corpus, experiment)
+			dirs = os.listdir(directory)
+			for filename in dirs:
+				if not filename.startswith('detail_'):
+					network, hidden_units = filename[:-4].split('_')
+					model_directory = os.path.join('..', 'saved_models', corpus, network, hidden_units)
+					models = os.listdir(model_directory)
+					ckpt = os.path.join(model_directory, models[0])
+					epoch, train_loss, train_acc, val_loss, val_acc = read_checkpoint(ckpt)
+					df = pd.read_csv(os.path.join(directory, filename),delimiter=',')
+					df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+					df = df.rename(str.lower, axis='columns')
+					df['val_acc'], df['val_loss'], df['train_acc'], df['train_loss'], df['epoch'], df['network'], df['experiment'], df['corpus'], df['hidden_units']  = val_acc, val_loss, train_acc, train_loss, epoch, network, experiment, corpus, hidden_units
+					col_order = ['network', 'hidden_units', 'corpus', 'experiment', 'accuracy', 'precision', 'recall', 'f1_score', 'epoch', 'train_acc', 'train_loss', 'val_acc', 'val_loss']
+					df = df[col_order]
+					single_frames.append(df)
+	# Join all small dfs into the complete overview of all results
+	results = pd.concat(single_frames, ignore_index=True)
+	results = results.sort_values(by='accuracy', ascending=False)
+	
+	return results
+	
+def save2file(dataframe, experiment, corpus, mode, outpath):
+	try:
+		os.makedirs(outpath)
+	except:
+		print("Directory {} exists, proceeding.".format(outpath))
+	if mode=='csv':
+		dataframe.to_csv(os.path.join(outpath, 'results.csv'), index=False)
+	elif mode=='latex':
+		dataframe.to_latex(os.path.join(outpath, 'results_{}_{}.tex'.format(experiment, corpus)), columns=PERFORMANCE_COLUMNS, float_format='{:0.3f}'.format, index=False)
+
+results = create_results()
+results['hidden_units'] = results['hidden_units'].astype(int)
+LRD = results.loc[results.experiment == 'LRD']
+LRD = LRD.sort_values(by=['network', 'hidden_units'], ascending=True)
+LRD['network'] = LRD['network'] + '-' + LRD['hidden_units'].astype(str)
+LRD_base = LRD.loc[LRD.corpus == 'base']
+LRD_high = LRD.loc[LRD.corpus == 'high']
+LRD_low = LRD.loc[LRD.corpus == 'low']
+save2file(LRD_base, 'LRD', 'base', 'latex', OUTPATH_LATEX)
+save2file(LRD_high, 'LRD', 'high', 'latex', OUTPATH_LATEX)
+save2file(LRD_low, 'LRD', 'low', 'latex', OUTPATH_LATEX)
+
+ND = results.loc[results.experiment == 'ND']
+ND = ND.sort_values(by=['network', 'hidden_units'], ascending=True)
+ND['network'] = ND['network'] + '-' + ND['hidden_units'].astype(str)
+ND_base = ND.loc[ND.corpus == 'base']
+ND_high = ND.loc[ND.corpus == 'high']
+ND_low = ND.loc[ND.corpus == 'low']
+save2file(ND_base, 'ND', 'base', 'latex', OUTPATH_LATEX)
+save2file(ND_high, 'ND', 'high', 'latex', OUTPATH_LATEX)
+save2file(ND_low, 'ND', 'low', 'latex', OUTPATH_LATEX)

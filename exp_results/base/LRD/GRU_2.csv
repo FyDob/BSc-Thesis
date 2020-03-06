@@ -1,2 +1,2 @@
-Loss,Accuracy
-0.297,0.890
+Loss,Accuracy,precision,recall,f1_score
+0.297,0.89,0.9821939224824611,0.794092,0.8781833222006449
