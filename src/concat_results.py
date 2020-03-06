@@ -65,28 +65,34 @@ def save2file(dataframe, experiment, corpus, mode, outpath):
 	except:
 		print("Directory {} exists, proceeding.".format(outpath))
 	if mode=='csv':
-		dataframe.to_csv(os.path.join(outpath, 'results.csv'), index=False)
+		dataframe.to_csv(os.path.join(outpath, 'results_{}_{}.csv'.format(experiment, corpus)), index=False)
 	elif mode=='latex':
 		dataframe.to_latex(os.path.join(outpath, 'results_{}_{}.tex'.format(experiment, corpus)), columns=PERFORMANCE_COLUMNS, float_format='{:0.3f}'.format, index=False)
 
+def create_all_tables(df, mode):
+	corpora = ['base', 'low', 'high']
+	if mode in ('SRNN', 'LSTM', 'GRU'):
+		data = df.loc[results.network == mode]
+		for corpus in corpora:
+			data_corpus = data.loc[data.corpus == corpus]
+			save2file(data_corpus, mode, corpus, 'csv', OUTPATH_CSV)
+			print(mode, corpus)
+			mean = data_corpus.mean()
+			std = data_corpus.std()
+			total = pd.concat([mean, std], axis=1)
+			print(total.T)
+	elif mode in ('LRD', 'ND'):
+		data = df.loc[results.experiment == mode]
+		for corpus in corpora:
+			data_corpus = data.loc[data.corpus == corpus]
+			save2file(data_corpus, mode, corpus, 'csv', OUTPATH_CSV)
+
 results = create_results()
 results['hidden_units'] = results['hidden_units'].astype(int)
-LRD = results.loc[results.experiment == 'LRD']
-LRD = LRD.sort_values(by=['network', 'hidden_units'], ascending=True)
-LRD['network'] = LRD['network'] + '-' + LRD['hidden_units'].astype(str)
-LRD_base = LRD.loc[LRD.corpus == 'base']
-LRD_high = LRD.loc[LRD.corpus == 'high']
-LRD_low = LRD.loc[LRD.corpus == 'low']
-save2file(LRD_base, 'LRD', 'base', 'latex', OUTPATH_LATEX)
-save2file(LRD_high, 'LRD', 'high', 'latex', OUTPATH_LATEX)
-save2file(LRD_low, 'LRD', 'low', 'latex', OUTPATH_LATEX)
+results = results.sort_values(by=['network', 'hidden_units'], ascending=True)
 
-ND = results.loc[results.experiment == 'ND']
-ND = ND.sort_values(by=['network', 'hidden_units'], ascending=True)
-ND['network'] = ND['network'] + '-' + ND['hidden_units'].astype(str)
-ND_base = ND.loc[ND.corpus == 'base']
-ND_high = ND.loc[ND.corpus == 'high']
-ND_low = ND.loc[ND.corpus == 'low']
-save2file(ND_base, 'ND', 'base', 'latex', OUTPATH_LATEX)
-save2file(ND_high, 'ND', 'high', 'latex', OUTPATH_LATEX)
-save2file(ND_low, 'ND', 'low', 'latex', OUTPATH_LATEX)
+create_all_tables(results, 'LRD')
+create_all_tables(results, 'ND')
+create_all_tables(results, 'SRNN')
+create_all_tables(results, 'LSTM')
+create_all_tables(results, 'GRU')
