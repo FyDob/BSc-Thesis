@@ -64,7 +64,7 @@ To generate incorrect samples, the generated correct LRD words were corrupted in
 
 While $w_{1}$ and $w_{2}$ might have been seen in training (for models trained on the base corpus), the resulting word most certainly has not been observed. Neither could the model possibly have encountered a long-range dependency spanning $36$ characters between the opening and closing bracket. As such, a high classification accuracy serves as a strong indication of the model having learned to generalize to longer, non-concatenated Dyck words.\footnote{While the infixed sub-words are indeed concatenated, $w_{\text{LRD}}$ cannot be created by concatenating two shorter words due to being wrapped by a matching bracket pair.} I report model performance on Experiment 1 in terms of accuracy, precision, recall and F1 score.
 
-\subsection{Experiment 2: Deeper Nesting}\label{DN}
+\subsection{Experiment 2: New Depths}\label{ND}
 To investigate how well a model performs on predicting brackets on a nesting level deeper than anything included in training, another test set was constructed. Since Experiment 1 already investigates Long-Range Dependency (LRD), this corpus was designed so its results are confounded as little as possible by LRD performance.
 
 For this task, the test set consisted of  $1{,}000{,}000$ samples of length $30$, half of which were correct Dyck words. First, $500,000$  correct words were chosen at random from the base corpus. Then, they were wrapped by a prefix of five randomly chosen opening brackets and a suffix of the corresponding closing brackets as follows:
