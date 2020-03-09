@@ -1,11 +1,13 @@
+%TODO talk about 0.0 F1 score models
+%TODO introduce the +/- 5% corridor in the first paragraph to disregard the insignificant results.
 \section{Results}\label{ch:results}
 During training, almost all $81$ trained models achieved a validation accuracy significantly above random guessing, except for the SRNN-2 models trained on the base and low LRD corpus, which scored $75.0\%$ and $50.4\%$ respectively. I have included them in the experiments regardless of their low validation accuracy, since it was unclear whether validation accuracy was a strong predictor for a network's performance on the experiment data. I present my results with regard to three focus points: First, the overall performance of different architectures with respect to which corpus they were trained on, then the individual model performances on each of the two experiments, and finally a closer look at classifications made by outlier networks - networks which drastically over- or underperformed in either of the experiments - with regards to word features.
 
 \subsection{Architecture/Training Data}
 \input{tab/results_compounded}
-As can be seen in Table \ref{tab:perf_all}, none of the architectures consistently achieved an accuracy far above the random guessing baseline of $50.0\%$. However, there was still a notable difference in performance between architectures: on average, the GRU networks scored the highest on accuracy and precision, while the SRNN networks achieved the best recall and F1 score. With $51.5\%$, LSTMs scored an average accuracy right between SRNNs ($50.0\%$) and GRUs ($53.3\%$), but they underperformed in all other experiment measures.
+As can be seen in Table \ref{tab:perf_all}, none of the architectures consistently achieved an accuracy far above the random guessing baseline of $50.0\%$. However, there was still a notable difference in performance between architectures: on average, the GRU networks scored the highest on accuracy and precision, while the SRNN networks achieved the best recall and F1 score. With $51.5\%$, LSTMs scored an average accuracy between SRNNs ($50.0\%$) and GRUs ($53.3\%$), but they underperformed in all other experiment measures.
 
-Futhermore, the choice of training data had a notable effect on overall model performance: SRNNs and GRUs received a boost in performance in all measures when comparing the Base to the Low LRD models, elevating SRNNs from an accuracy below random guessing to $51.4\%$. While LSTMs lost $1.4\%$ in terms of accuracy, all other performance measures improved significantly for the Low LRD models. Training on the High LRD corpus aided SRNNs in terms of accuracy, precision and F1 score, but worsened accuracy, recall and F1 score for LSTMs and GRUs.
+Furthermore, the choice of training data had a notable effect on overall model performance: SRNNs and GRUs received a boost in performance in all measures when comparing the Base to the Low LRD models, elevating SRNNs from an accuracy below random guessing to $51.4\%$. While LSTMs lost $1.4\%$ in terms of accuracy, all other performance measures improved significantly for the Low LRD models. Training on the High LRD corpus aided SRNNs in terms of accuracy, precision and F1 score, but worsened accuracy, recall and F1 score for LSTMs and GRUs.
 
 \subsection{Experiment 1: Long-Range Dependency}\label{resultsLRD}
 I report results for Experiment 1 in Tables \ref{tab:perf_LRDbase}, \ref{tab:perf_LRDlow} and \ref{tab:perf_LRDhigh}, which include the performance measures for all networks trained on the Base, Low and High LRD corpus respectively, as evaluated on Experiment 1.
@@ -20,26 +22,20 @@ $12$ of $27$ Low LRD-trained models ($44.4\%$) scored an accuracy higher than th
 
 \input{tab/results_LRD_high}
 
-$9$ of $27$ High LRD-trained models ($33.3\%$) achieved an accuracy above baseline, but only GRU-512 by a significant margin with $80\%$. $23$ models performed within the $\pm 5\%$ margin around the baseline, and $3$ models (LSTM-4, LSTM-8 and GRU-8) underperfomed significantly. There was no relation between validation accuracy and performance on experiment data for High LRD models, either. Compared to the Base models, High LRD models almost consistently scored worse: accuracy, recall and F1 score went down by $-1.0$, $-2.2$ and $-1.8$ p.p. respectively, but precision was improved by $5.6$ p.p.
+$9$ of $27$ High LRD-trained models ($33.3\%$) achieved an accuracy above baseline, but only GRU-512 by a significant margin with $80\%$. $23$ models performed within the $\pm 5\%$ margin around the baseline, and $3$ models (LSTM-4, LSTM-8 and GRU-8) underperfomed significantly. There was no relation between validation accuracy and performance on experiment data for High LRD models, either. Compared to the Base models, High LRD models almost consistently scored worse: accuracy, recall and F1 score went down by $-1.0$, $-2.2$ and $-1.8$ p.p. respectively, but precision was improved by $+5.6$ p.p.
 
 \subsection{Experiment 2: New Depths}\label{resultsND}
+All results for Experiment 2 can be found in Tables \ref{tab:perf_NDbase}, \ref{tab:perf_NDlow} and \ref{tab:perf_NDhigh}. When comparing mean performances across all models, they largely scored higher on Experiment 2 than Experiment 1. This suggests that Experiment 2 was easier regardless of training data. As with Experiment 1, a model's validation accuracy did not correlate with its performance on the experiment data.
 
 \input{tab/results_ND_base}
 
+Among the Base models, $8$ of $27$ ($29.6\%$) performed above guessing baseline in Experiment 2 - the same ratio as for Experiment 1, though there was minimal overlap in the best performers. Only GRU-64 and SRNN-64 performed above $50\%$ accuracy for both experiments. $20$ of $27$ models stayed in the $\pm 5\%$ margin of the baseline, with only $2$ (SRNN-128 and SRNN-256) dropping below that. The best performing network - LSTM-128 - scored the highest accuracy across all models and all experiments with $99.3\%$.
+
 \input{tab/results_ND_low}
 
+The same number of Low LRD models performed above chance for Experiment 2 as for Experiment 1 ($44.4\%$), with $6$ models (SRNN-2, SRNN-8, LSTM-16, LSTM-512, GRU-4 and GRU-64) occuring in both groups. LSTM-512 and GRU-64 have both achieved an accuracy $>90\%$. $19$ models performed within the $\pm 5\%$ margin around the baseline, only $2$ dropped below that. Compared to the Base models, low LRD models also performed better on Experiment 2: mean accuracy is up by $+0.4$ p.p., precision by $+20.6$, recall by $+3.5$ and F1 score by $6.5$ p.p.
+
 \input{tab/results_ND_high}
-%\begin{figure}[h]
-% 	\centering
-%	\includegraphics[width=1.\textwidth, center]{fig/ACC_BEST_ND}
-%	\caption[Experiment 2 - Accuracy by Index]{The predicted accuracy of the best-performing model of its architecture, calculated per character index. The baseline performance of $25\%$ is shown by the black dashed line. Note that the best High LRD and Baseline GRU models failed to learn $D_{2}$, despite their high accuracy.}
-%\label{fig:DNAccuracyByIndex}
-%\end{figure}
-%Similarly to Experiment 1, several trends hold true for all models when inspecting the accuracy by character index for the best performing models. First, they continue to perform well above chance in all cases. Second, accuracy develops in $3$ distinct phases for this experiment: a sharp decline from character position $5$ to $14$, followed by a slower decline until character position $23$. Finally, accuracy decreases drastically, reaching its global minimum at character position $29$ and remaining there for the final character.
-%\begin{figure}[h]
-% 	\centering
-%	\includegraphics[width=1.\textwidth, center]{fig/ND_overview}
-%	\caption[Experiment 2 - Confusion Matrices]{The confusion matrices of the best performing RNN models, respective the corpus they were trained on.}
-%\label{fig:DNConfusionMatrices}
-%\end{figure}
-%When considering the influence of training corpus properties on accuracy, the same pattern as in Experiment 1 emerges: the models trained on the Baseline or Low LRD corpus perform with equal accuracy ($34.36\%$), save for the Baseline GRU model ($50.94\%$). Again, a look at the model's confusion matrix shows it as unable to predict opening brackets at all (Figure \ref{fig:DNConfusionMatrices}). The same holds true for all models trained on the High LRD corpus. While they continue to outperform all other models in terms of accuracy (i.e. the SRNN with $8$ hidden units scores $67.40\%$), they fail the confusion matrix criterion and as such have failed to learn $D_{2}$.
+While the highest number of High LRD models have achieved an accuracy above random guessing - $10$ of $27$, or $37.0\%$ - only SRNN-16 crossed the $60\%$ threshold at all. Indeed, aside from SRNN-16, only one other model lay outside of the $\pm 5\%$ margin around the baseline - LSTM-64, with an accuracy of $28.5\%$. When comparing with the Base models, all measures except for precision, which improved by $+10.7$ p.p. Accuracy went down by $-2.7$ p.p., recall by $-7.5$ and F1 score by $-5.0$ p.p.
+
+\subsection{Outliers: Error analysis}
