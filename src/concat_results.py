@@ -71,8 +71,9 @@ def save2file(dataframe, experiment, corpus, mode, outpath):
 
 def create_all_tables(df, mode):
 	corpora = ['base', 'low', 'high']
+	measures = []
 	if mode in ('SRNN', 'LSTM', 'GRU'):
-		data = df.loc[results.network == mode]
+		data = df.loc[df.network == mode]
 		for corpus in corpora:
 			data_corpus = data.loc[data.corpus == corpus]
 			save2file(data_corpus, mode, corpus, 'csv', OUTPATH_CSV)
@@ -81,12 +82,15 @@ def create_all_tables(df, mode):
 			std = data_corpus.std()
 			total = pd.concat([mean, std], axis=1)
 			print(total.T)
+			measures.append(total.T)
+		overview = pd.concat(measures)
+		print(overview)
 	elif mode in ('LRD', 'ND'):
-		data = df.loc[results.experiment == mode]
+		data = df.loc[df.experiment == mode]
 		for corpus in corpora:
 			data_corpus = data.loc[data.corpus == corpus]
 			save2file(data_corpus, mode, corpus, 'csv', OUTPATH_CSV)
-
+	
 results = create_results()
 results['hidden_units'] = results['hidden_units'].astype(int)
 results = results.sort_values(by=['network', 'hidden_units'], ascending=True)
