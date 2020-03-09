@@ -8,13 +8,19 @@ As can be seen in Table \ref{tab:perf_all}, none of the architectures consistent
 Futhermore, the choice of training data had a notable effect on overall model performance: SRNNs and GRUs received a boost in performance in all measures when comparing the Base to the Low LRD models, elevating SRNNs from an accuracy below random guessing to $51.4\%$. While LSTMs lost $1.4\%$ in terms of accuracy, all other performance measures improved significantly for the Low LRD models. Training on the High LRD corpus aided SRNNs in terms of accuracy, precision and F1 score, but worsened accuracy, recall and F1 score for LSTMs and GRUs.
 
 \subsection{Experiment 1: Long-Range Dependency}\label{resultsLRD}
-Bla bla bla
+I report results for Experiment 1 in Tables \ref{tab:perf_LRDbase}, \ref{tab:perf_LRDlow} and \ref{tab:perf_LRDhigh}, which include the performance measures for all networks trained on the Base, Low and High LRD corpus respectively, as evaluated on Experiment 1.
 
 \input{tab/results_LRD_base}
 
+When trained on the Base corpus, $8$ of $27$ models ($29.6\%$) achieved an accuracy above random guessing. Among those $8$, only $2$ reached an accuracy above $60\%$: LSTM-8 and GRU-2. The vast majority of models - $20$ in total - reached an accuracy of $50 \pm 5\%$. $4$ performed even worse than that: the worst model (SRNN-16) only achieved $27.2\%$ accuracy on the experiment data. There was no apparent correlation between validation accuracy and model performance in Experiment 1 - indeed, SRNN-2 with the lowest validation accuracy at $75.0\%$ evaluated at below chance, but so did several models with a validation accuracy of $100\%$.
+
 \input{tab/results_LRD_low}
 
+$12$ of $27$ Low LRD-trained models ($44.4\%$) scored an accuracy higher than the random guessing baseline. Among those, $3$ models - SRNN-4, LSTM-16 and GRU-64 - reached an accuracy above $60\%$. While $22$ models fell within the $50 \pm 5\%$ belt of accuracy, only $1$ model performed significantly worse: LSTM-4 with $27.8\%$. Validation accuracy was entirely unrelated to model performance, with LSTM-4 having achieved a perfect score on the validation data, but completely failing at Experiment 1. On average, all measures have improved when compared to the Base models: accuracy improved by $+2.7$ percentage points (p.p.), precision by $+11.0$ p.p., recall by $+9.5$ p.p. and F1 score by $+8.3$ p.p.
+
 \input{tab/results_LRD_high}
+
+$9$ of $27$ High LRD-trained models ($33.3\%$) achieved an accuracy above baseline, but only GRU-512 by a significant margin with $80\%$. $23$ models performed within the $\pm 5\%$ margin around the baseline, and $3$ models (LSTM-4, LSTM-8 and GRU-8) underperfomed significantly. There was no relation between validation accuracy and performance on experiment data for High LRD models, either. Compared to the Base models, High LRD models almost consistently scored worse: accuracy, recall and F1 score went down by $-1.0$, $-2.2$ and $-1.8$ p.p. respectively, but precision was improved by $5.6$ p.p.
 
 \subsection{Experiment 2: New Depths}\label{resultsND}
 
