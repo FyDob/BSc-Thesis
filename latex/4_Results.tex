@@ -1,11 +1,11 @@
 \section{Results}\label{ch:results}
-%While testing was done on all $81$ models, the highest accuracy for a model was often reached at a low number of hidden units, ranging from $2$ to $16$. As such, only the results of the simplest models achieving best performance will be reported. A model needs to fulfil three criteria to qualify as the best performing one.
-%\begin{enumerate}
-%\item It needs to predict opening brackets, as shown by its confusion matrix. These do not have to be accurate predictions given the target string (as explained in Section \ref{evaluation}, predicting an opening bracket is always grammatical), they just have to occur. After all, if a model never predicts an opening bracket, it cannot have learned $D_{2}$. If not a single model in an architecture learned to predict both opening brackets, the architecture is considered to have failed the task. In such a case, the results are still reported to contrast their performance with successful models. Preference is given to failed models that partially succeeded, i.e. that predict at least one opening bracket.
-%\item Once a model has fulfilled the previous condition, it needs to have achieved the highest accuracy among the successful models.
-%\item It needs to fulfil the two previous conditions with the lowest number of hidden units.
-%\end{enumerate}
-%Conditions 2 and 3 also apply to the failed models - if the most complex model does not perform any better than the simplest model, the increased complexity does not affect performance. As such, the simplest model with the highest accuracy will be reported on.
+During training, almost all $81$ trained models achieved a validation accuracy significantly above random guessing, except for the SRNN-2 models trained on the base and low LRD corpus, which scored $75.0\%$ and $50.4\%$ respectively. I have included them in the experiments regardless of their low validation accuracy, since it was unclear whether validation accuracy was a strong predictor for a network's performance on the experiment data. I present my results with regard to three focus points: First, the overall performance of different architectures with respect to which corpus they were trained on, then the individual model performances on each of the two experiments, and finally a closer look at classifications made by outlier networks - networks which drastically over- or underperformed in either of the experiments - with regards to word features.
+
+\subsection{Architecture/Training Data}
+\input{tab/results_compounded}
+As can be seen in Table \ref{tab:perf_all}, none of the architectures consistently achieved an accuracy far above the random guessing baseline of $50.0\%$. However, there was still a notable difference in performance between architectures: on average, the GRU networks scored the highest on accuracy and precision, while the SRNN networks achieved the best recall and F1 score. With $51.5\%$, LSTMs scored an average accuracy right between SRNNs ($50.0\%$) and GRUs ($53.3\%$), but they underperformed in all other experiment measures.
+
+Futhermore, the choice of training data had a notable effect on overall model performance: SRNNs and GRUs received a boost in performance in all measures when comparing the Base to the Low LRD models, elevating SRNNs from an accuracy below random guessing to $51.4\%$. While LSTMs lost $1.4\%$ in terms of accuracy, all other performance measures improved significantly for the Low LRD models. Training on the High LRD corpus aided SRNNs in terms of accuracy, precision and F1 score, but worsened accuracy, recall and F1 score for LSTMs and GRUs.
 
 \subsection{Experiment 1: Long-Range Dependency}\label{resultsLRD}
 Bla bla bla
@@ -15,24 +15,6 @@ Bla bla bla
 \input{tab/results_LRD_low}
 
 \input{tab/results_LRD_high}
-%\begin{figure}[h]
-% 	\centering
-%	\includegraphics[width=1.\textwidth, center]{fig/ACC_BEST_LRD}
-%	\caption[Experiment 1 - Accuracy by Index]{The predicted accuracy of the best-performing model of its architecture, calculated per character index.  The baseline performance of $25\%$ is shown by the black dashed line. Note that the best High LRD and Baseline GRU models failed to learn $D_{2}$, despite their high accuracy.}
-%\label{fig:LRDAccuracyByIndex}
-%\end{figure}
-%Assessing accuracy by character index (Figure \ref{fig:LRDAccuracyByIndex}) shows several general trends: all models perform significantly above chance regardless of training corpus.
-%In all cases, accuracy seems to develop in 4 distinct phases: phase 1 (character positions $0$-$10$) shows a sharp decline. Its decline slows down in phase 2 (character positions $11$-$17/18$), where it reaches a local minimum for two characters. In phase 3, accuracy steadily improves until character position $28$. For phase 4 (character positions $29$-$38$), accuracy declines again, until it reaches a global minimum on the final two characters.
-%\begin{figure}[h]
-% 	\centering
-%	\includegraphics[width=1.\textwidth, center]{fig/LRD_overview}
-%	\caption[Experiment 1 - Confusion Matrices]{The confusion matrices of the best performing RNN models, with respect to the corpus they were trained on.}
-%\label{fig:LRDConfusionMatrices}
-%\end{figure}
-%
-%In terms of accuracy, there is no overall performance gain or loss when training on the Low LRD corpus compared to the Baseline corpus. In both cases, $5$ of $6$ models achieve $51.62\%$ accuracy. The only outlier is the GRU model, which achieves $63.71\%$ accuracy. However, as Figure \ref{fig:LRDConfusionMatrices} shows, the GRU fails to ever predict an opening bracket - the high accuracy stems from ungrammatical predictions. As such, the model is considered a failure within the scope of this thesis.
-%
-%Finally, models trained on the High LRD corpus consistently score the highest accuracy ($75.97\%$). However, none of them fulfil the confusion matrix criterion.
 
 \subsection{Experiment 2: New Depths}\label{resultsND}
 
