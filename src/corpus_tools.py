@@ -16,7 +16,7 @@ import random
 import pickle
 import numpy as np
 
-INPUT_FILE = 'cumlen20_1180000.txt' #sys.argv[1]
+INPUT_FILE = 'cumlen20_1180000.txt'
 INPUT_PATH = os.path.join('..', 'corpus', INPUT_FILE)
 SIZE = 1000000 # Training Corpus Size Target
 LENGTH = int(INPUT_FILE[6:8]) # max length of word in set
@@ -50,6 +50,10 @@ def maxNestingDepth(word):
 				word: string, Dyck word consisting of [, {, }, ] as brackets.
 			returns:
 				max_depth: int'''
+	# Remove EOW symbol when working with processed corpus.
+	if word[-1] == '$':
+		word = word[:-1]
+
 	max_depth = 0
 	depth = 0
 	for character in word:
@@ -58,14 +62,43 @@ def maxNestingDepth(word):
 		else: # Any other character must be a closing bracket and thus reduce depth
 			depth -= 1
 		if depth < 0:
-			raise ValueError('Invalid Dyck word detected; negative nesting depth.\n{}'.format(word))
+			#print('Invalid Dyck word detected; negative nesting depth.\n{}'.format(word))
+			return -1 # Indicates a corrupted word with a superfluous closing bracket in analysis.
+			
+		if depth > max_depth:
+			max_depth = depth
+			
+	return max_depth
+	
+def maxValidNestingDepth(word):
+	'''Calculates the maximum valid nesting depth within a word -- if the word was corrupted, negative nesting depth might occur.
+	This function disregards that.
+			args:
+				word: string, Dyck word consisting of [, {, }, ] as brackets.
+			returns:
+				max_depth: int'''
+	# Remove EOW symbol when working with processed corpus.
+	if word[-1] == '$':
+		word = word[:-1]
+
+	max_depth = 0
+	depth = 0
+	for character in word:
+		if character == "[" or character == "{":
+			depth += 1
+		elif character == "]" or character == "'}":
+			depth -= 1
+		else:
+			continue
+		if depth < 0:
+			continue
 			
 		if depth > max_depth:
 			max_depth = depth
 			
 	return max_depth
 
-def nestingDepth(word, position):
+def nestingDepthAtPosition(word, position):
 	'''Calculates the nesting depth of the character at word[position].
 			args:
 				word: string, Dyck word consisting of [, {, }, ] as brackets.
@@ -86,7 +119,10 @@ def maxBracketDistance(word):
 		args:
 			word: string, Dyck word consisting of [, {, }, ] as brackets.
 		returns:
-			max(max_distance_square,max_distance_curly): int, maximum distance for either of the two bracket pair types = maximum distance in the word.'''		
+			max(max_distance_square,max_distance_curly): int, maximum distance for either of the two bracket pair types = maximum distance in the word.'''
+	# Remove EOW symbol when working with processed corpus.
+	if word[-1] == '$':
+		word = word[:-1]
 	distance_square = 0
 	max_distance_square = 0
 	distance_curly = 0
@@ -157,9 +193,70 @@ def bracketDistanceAtPosition(word, position):
 			return distance-1
 		else:
 			distance += 1
-	# If the stack is not empty after seeing the whole word, the word must be invalid
-	raise ValueError('Invalid Dyck word detected; no closing bracket found.')
-		
+
+def determineError(word):
+	'''Given a corrupted D_2 word, this function determines the kind of error - too many opening or too many closing brackets.
+		args:
+			word: corrupted Dyck-2 word
+		returns:
+			error: type of error'''
+	open = ('[', '{')
+	closed = (']', '}')
+	o = 0
+	c = 0
+	for character in word:
+		if character in open:
+			o+=1
+		elif character in closed:
+		 c+=1
+		else:
+			continue
+	error = o-c
+	if error < 0:
+		return 'closed'
+	elif error > 0:
+		return 'open'
+	else:
+		return 'none'
+
+
+def findErrorPosition(word):
+	'''Given a corrupted D_2 word, this function determines the position of the corrupted bracket.
+		args:
+			word: corrupted Dyck-2 word
+		returns:
+			position: character position of corrupted bracket'''
+	word = word.lstrip('0')
+	# Stacks are filled with character positions. If a stack is not empty by the time the word is over,
+	# the remaining position is the error position.
+	# If there is an attempt to pop an empty stack before the word is over, the current position is the error position.
+	square_stack = []
+	curly_stack = []
+	
+	for i in range(len(word)):
+		if word[i] == '[':
+			square_stack.append(i)
+		elif word[i] == '{':
+			curly_stack.append(i)
+		elif word[i] == ']':
+			if square_stack:
+				square_stack.pop()
+			else:
+				return i
+		elif word[i] == '}':
+			if curly_stack:
+				curly_stack.pop()
+			else:
+				return i
+		else:
+			continue
+	if square_stack:
+		return square_stack[0]
+	elif curly_stack:
+		return curly_stack[0]
+	else:
+		raise ValueError("Encountered unknown corruption in word\n{}".format(word))
+
 def measureLength(corpus):
 	'''Calculates average length and variance thereof for all words in the corpus.
 		args:
@@ -262,7 +359,7 @@ def largerBD(corpus):
 		prev_ND = 0 # Nesting depth to compare to
 		for i in range(len(word)):
 			# Calculate nesting depth at each position of the word. Once it decreases, a closing bracket has been found
-			ND = nestingDepth(word, i)
+			ND = nestingDepthAtPosition(word, i)
 			if ND < prev_ND:
 				# Check if this position belongs to a bracket pair eligible for deletion - only {} and [] are eligible, since they have the shortest possible bracket distance
 				char = word[i-1]
@@ -445,31 +542,32 @@ def save2file(outpath, corpus):
 	for entry in corpus:
 		outfile.write('{},{}\n'.format(entry[0],entry[1]))
 
-file = open(INPUT_PATH, 'r')
-EOW = '$'
-raw_text = file.read()
+def create_corpora():
+	file = open(INPUT_PATH, 'r')
+	EOW = '$'
+	raw_text = file.read()
 
-print("Creating Base...")
-raw_classified = [[word+EOW,1] for word in raw_text.split(EOW)]
+	print("Creating Base...")
+	raw_classified = [[word+EOW,1] for word in raw_text.split(EOW)]
 
-print("Corrupting Base...")
-base = create_corpus(raw_classified, 'base')
-save2file(OUTPUT_TRAINING, base)
+	print("Corrupting Base...")
+	base = create_corpus(raw_classified, 'base')
+	save2file(OUTPUT_TRAINING, base)
 
-print("Corrupting High LRD...")
-highLRD = create_corpus(raw_classified, 'high')
-save2file(OUTPUT_HIGH_LRD, highLRD)
+	print("Corrupting High LRD...")
+	highLRD = create_corpus(raw_classified, 'high')
+	save2file(OUTPUT_HIGH_LRD, highLRD)
 
-print("Corrupting Low LRD...")
-lowLRD = create_corpus(raw_classified, 'low')
-save2file(OUTPUT_LOW_LRD, lowLRD)
+	print("Corrupting Low LRD...")
+	lowLRD = create_corpus(raw_classified, 'low')
+	save2file(OUTPUT_LOW_LRD, lowLRD)
 
-print("Creating LRD...")
-LRD_correct = create_LRD(raw_classified, LENGTH-2+1)
-LRD = create_corpus(LRD_correct, 'LRD')
-save2file(OUTPUT_LRD, LRD)
+	print("Creating LRD...")
+	LRD_correct = create_LRD(raw_classified, LENGTH-2+1)
+	LRD = create_corpus(LRD_correct, 'LRD')
+	save2file(OUTPUT_LRD, LRD)
 
-print("Creating ND...")
-ND_correct = create_ND(raw_classified, LENGTH+1)
-ND = create_corpus(ND_correct, 'ND')
-save2file(OUTPUT_ND, ND)
+	print("Creating ND...")
+	ND_correct = create_ND(raw_classified, LENGTH+1)
+	ND = create_corpus(ND_correct, 'ND')
+	save2file(OUTPUT_ND, ND)
