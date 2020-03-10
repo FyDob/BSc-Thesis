@@ -10,6 +10,7 @@
 
 import os
 import pandas as pd
+import corpus_tools
 
 def numbers_to_words(detail_file):
 	# TODO: Comment, clean up
@@ -31,8 +32,28 @@ def numbers_to_words(detail_file):
 		prev_line.extend(line)
 		mod_lines.append(prev_line)
 	num_to_char = str.maketrans('12345', '][{}$') # 34 and 12 could be the other bracket pair and vice versa, does not matter
-	mod_lines = [[line[0].translate(num_to_char)+line[1].translate(num_to_char), float(line[2]), int(line[3])] for line in mod_lines]
-	df = pd.DataFrame(mod_lines, columns=['words', 'predictions', 'golds'])
+	data_matrix = [[line[0].translate(num_to_char)+line[1].translate(num_to_char), float(line[2]), int(line[3])] for line in mod_lines]
+	
+	return data_matrix
+
+def prepare_dataframe(detail_file):
+	'''Processes the data_matrix from numbers_to_words into a pd.DataFrame for further analysis.
+		args:
+			detail_file: Path to a prediction-per-word file
+		returns:
+			df: pd.DataFrame with all columns relevant for analysis'''
+	data_matrix = numbers_to_words(detail_file)
+	df = pd.DataFrame(data_matrix, columns=['words', 'predictions', 'golds'])
+	# Append columns determining the
+	# - kind of error in the word if the word is wrong
+	# - position of the corrupted character if it can be determined
+	# - nesting depth at error position
+	# - running bracket distance at error position
+	df['max_valid_nesting_depth'] = df.words.map(lambda word: corpus_tools.maxValidNestingDepth(word))
+	df['error'] = df.words.map(lambda word: corpus_tools.determineError(word))
+	df['error_pos'] = df.words.loc[df.error != 'none'].map(lambda word: corpus_tools.findErrorPosition(word))
+	df['error_depth'] = df.words.loc[df.error != 'none'].map(lambda word: corpus_tools.nestingDepthAtPosition(word, corpus_tools.findErrorPosition(word)))
+	df['error_distance'] = df.words.loc[df.error != 'none'].map(lambda word: corpus_tools.bracketDistanceAtPosition(word, corpus_tools.findErrorPosition(word)))
 	
 	return df
 
@@ -54,6 +75,26 @@ def measure_performance(results):
 			f1_score = 2.*((precision*recall)/(precision+recall))
 	return precision, recall, f1_score
 	
+def breakdownPredictions(df):
+	# Determine all predictions in their own series to analyze.
+	true_positives = df.loc[df.golds == 1].loc[df.predictions >= 0.5]
+	false_positives = df.loc[df.golds == 0].loc[df.predictions >= 0.5]
+	true_negatives = df.loc[df.golds == 0].loc[df.predictions <= 0.5]
+	false_negatives = df.loc[df.golds == 1].loc[df.predictions <= 0.5]
+
+	#print(false_positives.loc[false_positives.error == 'open'].describe())
+	#print(false_positives.loc[false_positives.error == 'closed'].describe())
+	print(false_positives.error.value_counts())
+
+	# TP = true_positives.words.map(lambda word: corpus_tools.maxValidNestingDepth(word))
+	# FP = false_positives.words.map(lambda word: corpus_tools.maxValidNestingDepth(word))
+	# TN = true_negatives.words.map(lambda word: corpus_tools.maxValidNestingDepth(word))
+	# FN = false_negatives.words.map(lambda word: corpus_tools.maxValidNestingDepth(word))
+	valid_nesting_depth = pd.DataFrame()
+	valid_nesting_depth['true_positives'], valid_nesting_depth['false_positives'], valid_nesting_depth['true_negatives'], valid_nesting_depth['false_negatives'] = true_positives.max_valid_nesting_depth.describe(), false_positives.max_valid_nesting_depth.describe(), true_negatives.max_valid_nesting_depth.describe(), false_negatives.max_valid_nesting_depth.describe()
+	
+	print(valid_nesting_depth.to_string())
+	
 def prepend_header(detail_file):
 	f = open(detail_file,'r')
 	temp = f.read()
@@ -65,75 +106,115 @@ def prepend_header(detail_file):
 	f.write(temp)
 	f.close()
 
+def print_to_console(corpus, experiment, network, hidden_units, performance):
+	detail_file = os.path.join('..', 'exp_results', corpus, experiment, 'detail_{}_{}.csv'.format(network, hidden_units))
+	print("===== {} {} {} {}-{} =====".format(corpus, experiment, performance, network, hidden_units).upper())
+	details = prepare_dataframe(detail_file)
+	print(details.head())
+	breakdownPredictions(details)
+	
 
 # DETAILLED
-#detail_file = os.path.join('..', 'exp_results', 'base', 'LRD', 'detail_{}_{}.csv'.format('LSTM', '8')) # 91% accuracy LRD
-detail_file = os.path.join('..', 'exp_results', 'base', 'LRD', 'detail_{}_{}.csv'.format('SRNN', '16')) # 27% accuracy LRD
-sparse_file = os.path.join('..', 'exp_results', 'base', 'LRD', '{}_{}.csv'.format('SRNN', '16')) # 27% accuracy LRD
-sparse = pd.read_csv(sparse_file)
-details = numbers_to_words(detail_file)
-print(details.describe())
-precision, recall, f1_score = measure_performance(details)
-sparse['precision'], sparse['recall'], sparse['f1_score'] = precision, recall, f1_score
-sparse.to_csv(sparse_file, index=False)
-#details = pd.read_csv(detail_file)
-#print(details.head())
+# detail_file = os.path.join('..', 'exp_results', 'base', 'LRD', 'detail_{}_{}.csv'.format('LSTM', '8')) # 91% accuracy LRD
+# #sparse_file = os.path.join('..', 'exp_results', 'base', 'LRD', '{}_{}.csv'.format('SRNN', '16')) # 27% accuracy LRD
+# #sparse = pd.read_csv(sparse_file)
+# details = prepare_dataframe(detail_file)
+# print(details.head())
+# breakdownPredictions(details)
+#print(details.loc[details.error == 'closed'].describe())
+#print(details.loc[details.error == 'open'].head())
+#print(details.error.value_counts())
+
+# good: all networks with experiment accuracy > 55%
+# bad: all networks with experiment accuracy < 45%
+# LRD
+LRD_base_good = ['LSTM 8', 'GRU 2', 'GRU 128']
+LRD_base_bad = ['GRU 32', 'LSTM 128', 'LSTM 16', 'SRNN 16']
+
+LRD_low_good = ['GRU 2', 'SRNN 4', 'LSTM 16', 'GRU 64']
+LRD_low_bad = ['LSTM 4']
+
+LRD_high_good = ['GRU 512']
+LRD_high_bad = ['LSTM 8', 'GRU 8', 'LSTM 4']
+
+# ND
+ND_base_good = ['LSTM 128', 'LSTM 32', 'GRU 512', 'SRNN 2', 'GRU 4']
+ND_base_bad = ['SRNN 128', 'SRNN 256']
+
+ND_low_good = ['LSTM 512', 'GRU 64', 'SRNN 32', 'LSTM 16', 'GRU 4', 'LSTM 8']
+ND_low_bad = ['SRNN 4', 'LSTM 32']
+
+ND_high_good = ['SRNN 16']
+ND_high_bad = ['LSTM 64']
+
+for entry in LRD_base_good:
+	network, hidden_units = entry.split()
+	print_to_console('base', 'LRD', network, hidden_units, 'good')
+	
+for entry in LRD_base_bad:
+	network, hidden_units = entry.split()
+	print_to_console('base', 'LRD', network, hidden_units, 'bad')
+
+for entry in LRD_low_good:
+	network, hidden_units = entry.split()
+	print_to_console('low', 'LRD', network, hidden_units, 'good')
+	
+for entry in LRD_low_bad:
+	network, hidden_units = entry.split()
+	print_to_console('low', 'LRD', network, hidden_units, 'bad')
+
+for entry in LRD_high_good:
+	network, hidden_units = entry.split()
+	print_to_console('high', 'LRD', network, hidden_units, 'good')
+	
+for entry in LRD_high_bad:
+	network, hidden_units = entry.split()
+	print_to_console('high', 'LRD', network, hidden_units, 'bad')
+	
+for entry in ND_base_good:
+	network, hidden_units = entry.split()
+	print_to_console('base', 'ND', network, hidden_units, 'good')
+	
+for entry in ND_base_bad:
+	network, hidden_units = entry.split()
+	print_to_console('base', 'ND', network, hidden_units, 'bad')
+
+for entry in ND_low_good:
+	network, hidden_units = entry.split()
+	print_to_console('low', 'ND', network, hidden_units, 'good')
+	
+for entry in ND_low_bad:
+	network, hidden_units = entry.split()
+	print_to_console('low', 'ND', network, hidden_units, 'bad')
+
+for entry in ND_high_good:
+	network, hidden_units = entry.split()
+	print_to_console('high', 'ND', network, hidden_units, 'good')
+	
+for entry in ND_high_bad:
+	network, hidden_units = entry.split()
+	print_to_console('high', 'ND', network, hidden_units, 'bad')
 
 # 1. Determine which networks qualify for closer scrutiny (best performers, worst performers)
 # Iterate through all detail files
-corpora = ['base', 'high', 'low']
-experiments = ['LRD', 'ND']
-networks = ['SRNN', 'GRU', 'LSTM']
-for corpus in corpora:
-	for experiment in experiments:
-		for network in networks:
-			for hidden_units in [2**i for i in range(1,10)]:
-				detail_file = os.path.join('..', 'exp_results', corpus, experiment, 'detail_{}_{}.csv'.format(network, str(hidden_units)))
-				sparse_file = os.path.join('..', 'exp_results', corpus, experiment, '{}_{}.csv'.format(network, str(hidden_units)))
-				print(sparse_file)
-				sparse = pd.read_csv(sparse_file)
-				details = numbers_to_words(detail_file)
-				print(details.describe())
-				precision, recall, f1_score = measure_performance(details)
-				sparse['precision'], sparse['recall'], sparse['f1_score'] = precision, recall, f1_score
-				sparse.to_csv(sparse_file, index=False)
+# corpora = ['base', 'high', 'low']
+# experiments = ['LRD', 'ND']
+# networks = ['SRNN', 'GRU', 'LSTM']
+# for corpus in corpora:
+	# for experiment in experiments:
+		# for network in networks:
+			# for hidden_units in [2**i for i in range(1,10)]:
+				# continue
+				# Appending precision, recall, f1_score to sparse_file
+				# detail_file = os.path.join('..', 'exp_results', corpus, experiment, 'detail_{}_{}.csv'.format(network, str(hidden_units)))
+				# sparse_file = os.path.join('..', 'exp_results', corpus, experiment, '{}_{}.csv'.format(network, str(hidden_units)))
+				# print(sparse_file)
+				# sparse = pd.read_csv(sparse_file)
+				# details = numbers_to_words(detail_file)
+				# print(details.describe())
+				# precision, recall, f1_score = measure_performance(details)
+				# sparse['precision'], sparse['recall'], sparse['f1_score'] = precision, recall, f1_score
+				# sparse.to_csv(sparse_file, index=False)
 
 				#prepend_header(detail_file)
 				
-
-# SURFACE
-# infile_results = os.path.join('..', 'results', 'results.csv')
-# results = pd.read_csv(infile_results)
-
-# # print(results.head())
-# # print(results.describe())
-
-# LRD = results.loc[results.experiment == 'LRD']
-# #print(LRD.describe())
-# print(LRD.nlargest(3, 'accuracy'))
-# ND = results.loc[results.experiment == 'ND']
-# print(ND.describe())
-
-# SRNN = results.loc[results.network == 'SRNN']#.loc[results.experiment == 'LRD']
-# print("SRNN")
-# print(SRNN.describe())
-
-# LSTM = results.loc[results.network == 'LSTM']#.loc[results.experiment == 'LRD']
-# print("LSTM")
-# print(LSTM.describe())
-
-# GRU = results.loc[results.network == 'GRU']#.loc[results.experiment == 'LRD']
-# print("GRU")
-# print(GRU.describe())
-
-# high = results.loc[results.corpus == 'high']
-# print("high")
-# print(high.describe())
-
-# base = results.loc[results.corpus == 'base']
-# print("base")
-# print(base.describe())
-
-# low = results.loc[results.corpus == 'low']
-# print("low")
-# print(low.describe())
