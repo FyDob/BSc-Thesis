@@ -11,12 +11,58 @@
 import os
 import pandas as pd
 import corpus_tools
+import tensorflow as tf
+from tensorflow.keras.preprocessing.text import Tokenizer
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+import numpy as np
 
-def numbers_to_words(detail_file):
+MAX_LEN = ((20-2)*2)+1+2 # Maximum length of words in all corpora and experiments -- LRD length formula
+
+# def filter_length(df, max_len_train=MAX_LEN):
+	# '''Filters words of length > max_len_train out of a dataframe.
+		# args:
+			# df: pd.DataFrame of words
+			# max_len_train: Maximum length words in df should have
+		# returns:
+			# df: pd.DataFrame of words'''
+	# mask = (df['word'].str.len() <= max_len_train)
+	# df = df.loc[mask]
+	
+	# return df
+	
+# def get_tokenizer_config(training_df):
+	# '''Preprocesses training data by splitting it into train/test and transforming the strings into sequences of numbers.
+		# args:
+			# df: pd.DataFrame of words
+			# max_word_length: Maximum wanted length of words
+		# returns:
+			# tok.get_config: Configuration of tokenizer fitted on training corpus, to be used on experiment corpus; returned as dict'''
+	# training_df = filter_length(training_df)
+	# X = training_df.word
+	# Y = training_df.value
+	# # Encode target values
+	# le = LabelEncoder()
+	# Y = le.fit_transform(Y)
+	# Y = Y.reshape(-1,1)
+
+	# X_train_temp,X_test_temp,Y_train,Y_test = train_test_split(X,Y,test_size=0.2) # == TEST_SIZE in RNN_classifier.py
+
+	# # Preprocess words into sequences of numbers corresponding to the characters
+	# tok = Tokenizer(char_level=True)
+	# tok.fit_on_texts(X_train_temp)
+	
+	# return tok.get_config() # dict of config
+
+def numbers_to_words(corpus, experiment, network, hidden_units):
 	# TODO: Comment, clean up
 	# TODO: split into 2 functions -> numbers2words, file2df
 	'''Cleans up the saved detailed RNN predictions by removing additional characters and
 	translating character indices back to legible strings.'''
+	detail_file = os.path.join('..', 'exp_results', corpus, experiment, 'detail_{}_{}.csv'.format(network, hidden_units))
+	training_df = pd.read_csv('../training/{}.csv'.format(corpus),delimiter=',',encoding='latin-1')
+	
 	table = str.maketrans(dict.fromkeys(' []')) # Remove superfluous characters
 	lines = []
 	with open(detail_file, 'r') as f:
@@ -31,19 +77,25 @@ def numbers_to_words(detail_file):
 		prev_line = lines[i-1]
 		prev_line.extend(line)
 		mod_lines.append(prev_line)
-	num_to_char = str.maketrans('12345', '][{}$') # 34 and 12 could be the other bracket pair and vice versa, does not matter
-	data_matrix = [[line[0].translate(num_to_char)+line[1].translate(num_to_char), float(line[2]), int(line[3])] for line in mod_lines]
+	# Decode numbers to characters
+	if experiment == 'LRD':
+		num_to_char = {'1': ']', '2': '[', '3': '{', '4': '}', '5': '$'}
+	else:
+		num_to_char = {'1': ']', '2': '{', '3': '[', '4': '}', '5': '$'}
+	# Prepare matrix to be turned into a df
+	data_matrix = [[line[0].translate(line[0].maketrans(num_to_char))+line[1].translate(line[1].maketrans(num_to_char)), float(line[2]), int(line[3])] for line in mod_lines]
 	
 	return data_matrix
 
-def prepare_dataframe(detail_file):
+def prepare_dataframe(corpus, experiment, network, hidden_units, GLOBAL_WORDS):
 	'''Processes the data_matrix from numbers_to_words into a pd.DataFrame for further analysis.
 		args:
 			detail_file: Path to a prediction-per-word file
 		returns:
 			df: pd.DataFrame with all columns relevant for analysis'''
-	data_matrix = numbers_to_words(detail_file)
+	data_matrix = numbers_to_words(corpus, experiment, network, hidden_units)
 	df = pd.DataFrame(data_matrix, columns=['words', 'predictions', 'golds'])
+	df['words'] = GLOBAL_WORDS
 	# Append columns determining the
 	# - kind of error in the word if the word is wrong
 	# - position of the corrupted character if it can be determined
@@ -54,7 +106,7 @@ def prepare_dataframe(detail_file):
 	df['error_pos'] = df.words.loc[df.error != 'none'].map(lambda word: corpus_tools.findErrorPosition(word))
 	df['error_depth'] = df.words.loc[df.error != 'none'].map(lambda word: corpus_tools.nestingDepthAtPosition(word, corpus_tools.findErrorPosition(word)))
 	df['error_distance'] = df.words.loc[df.error != 'none'].map(lambda word: corpus_tools.bracketDistanceAtPosition(word, corpus_tools.findErrorPosition(word)))
-	
+	#print(df.head())
 	return df
 
 def measure_performance(results):
@@ -75,26 +127,28 @@ def measure_performance(results):
 			f1_score = 2.*((precision*recall)/(precision+recall))
 	return precision, recall, f1_score
 	
-def breakdownPredictions(df):
+def breakdownPredictions(df, corpus, experiment, network, hidden_units, performance):
+	generals = pd.DataFrame()
+	generals['corpus'], generals['experiment'], generals['network'], generals['hidden_units'], generals['performance'] =  pd.Series(corpus), experiment, network, hidden_units, performance
 	# Determine all predictions in their own series to analyze.
 	true_positives = df.loc[df.golds == 1].loc[df.predictions >= 0.5]
 	false_positives = df.loc[df.golds == 0].loc[df.predictions >= 0.5]
 	true_negatives = df.loc[df.golds == 0].loc[df.predictions <= 0.5]
 	false_negatives = df.loc[df.golds == 1].loc[df.predictions <= 0.5]
-
-	#print(false_positives.loc[false_positives.error == 'open'].describe())
-	#print(false_positives.loc[false_positives.error == 'closed'].describe())
-	print(false_positives.error.value_counts())
-
-	# TP = true_positives.words.map(lambda word: corpus_tools.maxValidNestingDepth(word))
-	# FP = false_positives.words.map(lambda word: corpus_tools.maxValidNestingDepth(word))
-	# TN = true_negatives.words.map(lambda word: corpus_tools.maxValidNestingDepth(word))
-	# FN = false_negatives.words.map(lambda word: corpus_tools.maxValidNestingDepth(word))
-	valid_nesting_depth = pd.DataFrame()
-	valid_nesting_depth['true_positives'], valid_nesting_depth['false_positives'], valid_nesting_depth['true_negatives'], valid_nesting_depth['false_negatives'] = true_positives.max_valid_nesting_depth.describe(), false_positives.max_valid_nesting_depth.describe(), true_negatives.max_valid_nesting_depth.describe(), false_negatives.max_valid_nesting_depth.describe()
 	
-	print(valid_nesting_depth.to_string())
+	true_positives = true_positives.join(generals)
+	false_positives = false_positives.join(generals)
+	true_negatives = true_negatives.join(generals)
+	false_negatives = false_negatives.join(generals)
 	
+	for column in generals.columns:
+		true_positives[column] = true_positives[column].fillna(generals[column][0])
+		false_positives[column] = false_positives[column].fillna(generals[column][0])
+		true_negatives[column] = true_negatives[column].fillna(generals[column][0])
+		false_negatives[column] = false_negatives[column].fillna(generals[column][0])
+	
+	return true_positives, false_positives, true_negatives, false_negatives
+
 def prepend_header(detail_file):
 	f = open(detail_file,'r')
 	temp = f.read()
@@ -106,13 +160,65 @@ def prepend_header(detail_file):
 	f.write(temp)
 	f.close()
 
-def print_to_console(corpus, experiment, network, hidden_units, performance):
-	detail_file = os.path.join('..', 'exp_results', corpus, experiment, 'detail_{}_{}.csv'.format(network, hidden_units))
-	print("===== {} {} {} {}-{} =====".format(corpus, experiment, performance, network, hidden_units).upper())
-	details = prepare_dataframe(detail_file)
-	print(details.head())
-	breakdownPredictions(details)
+def print_to_console(corpus, experiment, network, hidden_units, performance, GLOBAL_WORDS):
+	print(",{} {} {} {}-{},".format(corpus, experiment, performance, network, hidden_units).upper())
+	details = prepare_dataframe(corpus, experiment, network, hidden_units, GLOBAL_WORDS)
+	breakdownPredictions(details, corpus, experiment, network, hidden_units)
+
+def create_mega_df():
+	global_words_LRD = numbers_to_words('base', 'LRD', 'LSTM', '8')
+	df = pd.DataFrame(global_words_LRD, columns=['words', 'predictions', 'golds'])
+	GLOBAL_WORDS_LRD = df['words']
+	global_words_ND = numbers_to_words('base', 'ND', 'SRNN', '2')
+	df = pd.DataFrame(global_words_ND, columns=['words', 'predictions', 'golds'])
+	GLOBAL_WORDS_ND = df['words']
 	
+	true_positives_frames = []
+	false_positives_frames = []
+	true_negatives_frames = []
+	false_negatives_frames = []
+	valid_nesting_depth_frames = []
+	error_pos_frames = []
+	error_depth_frames = []
+	networks = ['base LRD LSTM 8 good', 'base LRD GRU 2 good', 'base LRD GRU 128 good',
+		'base LRD GRU 32 bad', 'base LRD LSTM 128 bad', 'base LRD LSTM 16 bad', 'base LRD SRNN 16 bad',
+		'low LRD GRU 2 good', 'low LRD SRNN 4 good', 'low LRD LSTM 16 good', 'low LRD GRU 64 good', 'low LRD LSTM 4 bad',
+		'high LRD GRU 512 good', 'high LRD LSTM 8 bad', 'high LRD GRU 8 bad', 'high LRD LSTM 4 bad',
+		'base ND LSTM 128 good', 'base ND LSTM 32 good', 'base ND GRU 512 good', 'base ND SRNN 2 good', 'base ND GRU 4 good',
+		'base ND SRNN 128 bad', 'base ND SRNN 256 bad',
+		'low ND LSTM 512 good', 'low ND GRU 64 good', 'low ND SRNN 32 good', 'low ND LSTM 16 good', 'low ND GRU 4 good', 'low ND LSTM 8 good',
+		'low ND SRNN 4 bad', 'low ND LSTM 32 bad',
+		'high ND SRNN 16 good',
+		'high ND LSTM 64 bad']
+	for entry in networks:
+		corpus, experiment, network, hidden_units, performance = entry.split()
+		if experiment == 'LRD':
+			GLOBAL_WORDS = GLOBAL_WORDS_LRD
+		else:
+			GLOBAL_WORDS = GLOBAL_WORDS_ND
+		details = prepare_dataframe(corpus, experiment, network, hidden_units, GLOBAL_WORDS)
+		true_positives, false_positives, true_negatives, false_negatives = breakdownPredictions(details, corpus, experiment, network, hidden_units, performance)
+		true_positives_frames.append(true_positives)
+		false_positives_frames.append(false_positives)
+		true_negatives_frames.append(true_negatives)
+		false_negatives_frames.append(false_negatives)
+		print("{} DONE!".format(entry))
+	mega_true_positives = pd.concat(true_positives_frames)
+	mega_false_positives = pd.concat(false_positives_frames)
+	mega_true_negatives = pd.concat(true_negatives_frames)
+	mega_false_negatives = pd.concat(false_negatives_frames)
+	print(mega_false_positives.loc[mega_false_positives.performance == 'good'].describe())
+	print(mega_false_positives.loc[mega_false_positives.performance == 'bad'].describe())
+	tp_out = os.path.join('..','results','mega_true_positives.csv')
+	fp_out = os.path.join('..','results','mega_false_positives.csv')
+	tn_out = os.path.join('..','results','mega_true_negatives.csv')
+	fn_out = os.path.join('..','results','mega_false_negatives.csv')
+	mega_true_positives.to_csv(tp_out)
+	mega_false_positives.to_csv(fp_out)
+	mega_true_negatives.to_csv(tn_out)
+	mega_false_negatives.to_csv(fn_out)	
+
+#create_mega_df()
 
 # DETAILLED
 # detail_file = os.path.join('..', 'exp_results', 'base', 'LRD', 'detail_{}_{}.csv'.format('LSTM', '8')) # 91% accuracy LRD
@@ -127,73 +233,60 @@ def print_to_console(corpus, experiment, network, hidden_units, performance):
 
 # good: all networks with experiment accuracy > 55%
 # bad: all networks with experiment accuracy < 45%
-# LRD
-LRD_base_good = ['LSTM 8', 'GRU 2', 'GRU 128']
-LRD_base_bad = ['GRU 32', 'LSTM 128', 'LSTM 16', 'SRNN 16']
+tp_in = os.path.join('..','results','mega_true_positives.csv')
+fp_in = os.path.join('..','results','mega_false_positives.csv')
+tn_in = os.path.join('..','results','mega_true_negatives.csv')
+fn_in = os.path.join('..','results','mega_false_negatives.csv')
+#tp = pd.read_csv(tp_in)
+fp = pd.read_csv(fp_in)
+#tn = pd.read_csv(tn_in)
+#fn = pd.read_csv(fn_in)
 
-LRD_low_good = ['GRU 2', 'SRNN 4', 'LSTM 16', 'GRU 64']
-LRD_low_bad = ['LSTM 4']
+columns_analysis = ['predictions', 'max_valid_nesting_depth', 'error_pos']
+corpora = ['base', 'low', 'high']
 
-LRD_high_good = ['GRU 512']
-LRD_high_bad = ['LSTM 8', 'GRU 8', 'LSTM 4']
-
-# ND
-ND_base_good = ['LSTM 128', 'LSTM 32', 'GRU 512', 'SRNN 2', 'GRU 4']
-ND_base_bad = ['SRNN 128', 'SRNN 256']
-
-ND_low_good = ['LSTM 512', 'GRU 64', 'SRNN 32', 'LSTM 16', 'GRU 4', 'LSTM 8']
-ND_low_bad = ['SRNN 4', 'LSTM 32']
-
-ND_high_good = ['SRNN 16']
-ND_high_bad = ['LSTM 64']
-
-for entry in LRD_base_good:
-	network, hidden_units = entry.split()
-	print_to_console('base', 'LRD', network, hidden_units, 'good')
+values = []
+for corpus in corpora:
+	corp_values = []
+	for column in columns_analysis:
+		value = fp.loc[fp.corpus == corpus].describe().loc['mean', column]
+		corp_values.extend([value])
+	values.append(corp_values)
 	
-for entry in LRD_base_bad:
-	network, hidden_units = entry.split()
-	print_to_console('base', 'LRD', network, hidden_units, 'bad')
+x = np.arange(len(columns_analysis))
+width = 0.15
 
-for entry in LRD_low_good:
-	network, hidden_units = entry.split()
-	print_to_console('low', 'LRD', network, hidden_units, 'good')
-	
-for entry in LRD_low_bad:
-	network, hidden_units = entry.split()
-	print_to_console('low', 'LRD', network, hidden_units, 'bad')
+fig, ax = plt.subplots()
+rects1 = ax.bar(x - width/3, values[0], width, label='base')
+rects2 = ax.bar(x + width/3, values[1], width, label='low')
+rects3 = ax.bar(x + 2*width/3, values[2], width, label='high')
 
-for entry in LRD_high_good:
-	network, hidden_units = entry.split()
-	print_to_console('high', 'LRD', network, hidden_units, 'good')
-	
-for entry in LRD_high_bad:
-	network, hidden_units = entry.split()
-	print_to_console('high', 'LRD', network, hidden_units, 'bad')
-	
-for entry in ND_base_good:
-	network, hidden_units = entry.split()
-	print_to_console('base', 'ND', network, hidden_units, 'good')
-	
-for entry in ND_base_bad:
-	network, hidden_units = entry.split()
-	print_to_console('base', 'ND', network, hidden_units, 'bad')
+# Add some text for labels, title and custom x-axis tick labels, etc.
+ax.set_ylabel(column)
+ax.set_title(column)
+ax.set_xticks(x)
+ax.set_xticklabels(columns_analysis)
+ax.legend()
 
-for entry in ND_low_good:
-	network, hidden_units = entry.split()
-	print_to_console('low', 'ND', network, hidden_units, 'good')
-	
-for entry in ND_low_bad:
-	network, hidden_units = entry.split()
-	print_to_console('low', 'ND', network, hidden_units, 'bad')
 
-for entry in ND_high_good:
-	network, hidden_units = entry.split()
-	print_to_console('high', 'ND', network, hidden_units, 'good')
-	
-for entry in ND_high_bad:
-	network, hidden_units = entry.split()
-	print_to_console('high', 'ND', network, hidden_units, 'bad')
+def autolabel(rects):
+	"""Attach a text label above each bar in *rects*, displaying its height."""
+	for rect in rects:
+		height = rect.get_height()
+		ax.annotate('{}'.format(height),
+					xy=(rect.get_x() + rect.get_width() / 2, height),
+					xytext=(0, 3),  # 3 points vertical offset
+					textcoords="offset points",
+					ha='center', va='bottom')
+
+
+autolabel(rects1)
+autolabel(rects2)
+autolabel(rects3)
+
+fig.tight_layout()
+
+plt.show()
 
 # 1. Determine which networks qualify for closer scrutiny (best performers, worst performers)
 # Iterate through all detail files
