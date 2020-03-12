@@ -208,7 +208,7 @@ def determineError(word):
 		if character in open:
 			o+=1
 		elif character in closed:
-		 c+=1
+			c+=1
 		else:
 			continue
 	error = o-c

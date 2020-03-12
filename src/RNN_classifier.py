@@ -116,12 +116,13 @@ def prepare_experiment_data(dataframe, tok, max_word_length=MAX_LEN):
 	df = filter_length(dataframe, max_word_length)
 	X_temp = df.word
 	Y = df.value
-	# Encode target values.
+	# Encode target values
 	le = LabelEncoder()
 	Y = le.fit_transform(Y)
 	Y = Y.reshape(-1,1)
 	
-	# Preprocess words into sequences of numbers corresponding to the characters.
+	# Preprocess words into sequences of numbers corresponding to the characters
+	# The same tokenizer is used for training and experiment data (training tokenizer is called in this function)
 	sequences = tok.texts_to_sequences(X_temp)
 	X = sequence.pad_sequences(sequences,maxlen=MAX_LEN)
 	
