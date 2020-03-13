@@ -86,7 +86,7 @@ def maxValidNestingDepth(word):
 	for character in word:
 		if character == "[" or character == "{":
 			depth += 1
-		elif character == "]" or character == "'}":
+		elif character == "]" or character == "}":
 			depth -= 1
 		else:
 			continue
