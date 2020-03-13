@@ -6,6 +6,9 @@
 
 % Embed PNG graphics
 \usepackage{graphicx}
+% Figures next to each other
+\usepackage{caption}
+\usepackage{subcaption}
 % English syllabification
 \usepackage[english]{babel}
 % West European encoding
@@ -99,9 +102,9 @@
 
 \begin{document}
 % Begin with empty page for print version
-\thispagestyle{empty}
-\mbox{}
-\newpage
+%\thispagestyle{empty}
+%\mbox{}
+%\newpage
 
 % TITLE PAGE %
 \input{settings/title_page}
@@ -178,8 +181,8 @@
 \input{declaration}
 
 % Empty final page for printing
-\newpage
-\thispagestyle{empty}
-\mbox{}
+%\newpage
+%\thispagestyle{empty}
+%\mbox{}
 
 \end{document}

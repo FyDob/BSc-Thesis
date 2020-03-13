@@ -38,4 +38,40 @@ The same number of Low LRD models performed above chance for Experiment 2 as for
 \input{tab/results_ND_high}
 While the highest number of High LRD models have achieved an accuracy above random guessing - $10$ of $27$, or $37.0\%$ - only SRNN-16 crossed the $60\%$ threshold at all. Indeed, aside from SRNN-16, only one other model lay outside of the $\pm 5\%$ margin around the baseline - LSTM-64, with an accuracy of $28.5\%$. When comparing with the Base models, all measures except for precision, which improved by $+10.7$ p.p. Accuracy went down by $-2.7$ p.p., recall by $-7.5$ and F1 score by $-5.0$ p.p.
 
-\subsection{Outliers: Error analysis}
+\subsection{Outliers: A Closer Look}
+As is evident from the results described so far, a vast majority of models fell within a $\pm 5\%$ margin around random guessing in terms of accuracy. I consider these models to not have extracted any useful grammar information from the training data and discard them for further investigation. As such, I will only discuss models with an accuracy either $> 55\%$ or $< 45\%$, to both gather information on what caused models to succeed, and what caused them to fail.
+
+First, I report the number of the two error categories (superfluous open bracket, superfluous closed bracket) per network architecture in Table ???. Hypothetically, since both categories were balanced in training and experiment data, there should be no significant difference between misclassifying one or the other - unless one category proves to be more complex to an architecture. The ratio of open-to-closed bracket misclassifications serves as a simple indication of whether the model extracted the correct information - that the amount of brackets needs to be balanced throughout a valid word - at all. A ratio of $1$ implies no model difference between the two categories. Conversely, any skewing above or below $1$ shows the model disproportionally struggling with one of the two categories.
+%TODO table
+%TODO which models skew from a ratio of 1?
+%TODO is there predominant skewing?
+
+To investigate properties of wrongly classified words, I scrutinize false positives for two word properties. I chose the properties as proxy values for word complexity: the maximum nesting depth of the word, and the position of the error within the word. Since all words within an experiment have the same length, variation in complexity can only arise through structural differences - like a deeper underlying parse tree. The values were averaged across all model instances with the same architecture and training corpus for reasons of simplicity, i.e. the results of both good base GRU outliers in Experiment 1 were merged. A low value in mean error position means that the model tended to misclassify words where the error occured early on in the word, while a high value means that the error occured later. Maximum nesting depth is an overall measure of complexity for the word, and refers to the deepest nesting level within the word. It is unrelated to the error position. Again, a low value means that the model predominantly misclassified words with a low nesting depth.
+
+
+
+\begin{figure}[!tbp]
+	\begin{minipage}{\textwidth}
+     \centering
+     \includegraphics[width=.45\textwidth]{fig/LRD_error_pos_good}\quad
+     \includegraphics[width=.45\textwidth]{fig/LRD_error_pos_bad}\\
+     \includegraphics[width=.45\textwidth]{fig/LRD_max_valid_nesting_depth_good}\quad
+     \includegraphics[width=.45\textwidth]{fig/LRD_max_valid_nesting_depth_bad}
+     \subcaption{Properties of false positives in Experiment 1.}
+     \label{fig:FP_Prop_LRD}
+   \end{minipage}\\[1em]
+   \begin{minipage}{\textwidth}
+     \centering
+     \includegraphics[width=.45\textwidth]{fig/ND_error_pos_good}\quad
+     \includegraphics[width=.45\textwidth]{fig/ND_error_pos_bad}\\
+     \includegraphics[width=.45\textwidth]{fig/ND_max_valid_nesting_depth_good}\quad
+     \includegraphics[width=.45\textwidth]{fig/ND_max_valid_nesting_depth_bad}
+     \subcaption{Properties of false positives in Experiment 2.}
+     \label{fig:FP_Prop_ND}
+   \end{minipage}\\
+  \caption{Properties of false positives as classified by different architectures.}
+\end{figure}
+
+% THIS GOES IN DISCUSSION
+%While all these words were misclassified, a strong effect of word complexity still implies that the models process the linear input in a structural manner. They may not have learned an accurate representation of $D_{2}$, but they are likely to have learned a structured approximation.
+%TODO
