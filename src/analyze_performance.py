@@ -182,8 +182,10 @@ def create_mega_df():
 	error_depth_frames = []
 	networks = ['base LRD LSTM 8 good', 'base LRD GRU 2 good', 'base LRD GRU 128 good',
 		'base LRD GRU 32 bad', 'base LRD LSTM 128 bad', 'base LRD LSTM 16 bad', 'base LRD SRNN 16 bad',
-		'low LRD GRU 2 good', 'low LRD SRNN 4 good', 'low LRD LSTM 16 good', 'low LRD GRU 64 good', 'low LRD LSTM 4 bad',
-		'high LRD GRU 512 good', 'high LRD LSTM 8 bad', 'high LRD GRU 8 bad', 'high LRD LSTM 4 bad',
+		'low LRD GRU 2 good', 'low LRD SRNN 4 good', 'low LRD LSTM 16 good', 'low LRD GRU 64 good',
+		'low LRD LSTM 4 bad',
+		'high LRD GRU 512 good',
+		'high LRD LSTM 8 bad', 'high LRD GRU 8 bad', 'high LRD LSTM 4 bad',
 		'base ND LSTM 128 good', 'base ND LSTM 32 good', 'base ND GRU 512 good', 'base ND SRNN 2 good', 'base ND GRU 4 good',
 		'base ND SRNN 128 bad', 'base ND SRNN 256 bad',
 		'low ND LSTM 512 good', 'low ND GRU 64 good', 'low ND SRNN 32 good', 'low ND LSTM 16 good', 'low ND GRU 4 good', 'low ND LSTM 8 good',
@@ -242,51 +244,121 @@ fp = pd.read_csv(fp_in)
 #tn = pd.read_csv(tn_in)
 #fn = pd.read_csv(fn_in)
 
-columns_analysis = ['predictions', 'max_valid_nesting_depth', 'error_pos']
-corpora = ['base', 'low', 'high']
-
-values = []
-for corpus in corpora:
-	corp_values = []
-	for column in columns_analysis:
-		value = fp.loc[fp.corpus == corpus].describe().loc['mean', column]
-		corp_values.extend([value])
-	values.append(corp_values)
+def plot_results(df, experiment, column_tex, performance):
+	plt.rc('text', usetex=True)
+	plt.rc('font', family='serif')
+	if column_tex == 'Max Valid Nesting Depth':
+		max_ylim = 15.
+	elif column_tex == 'Error Pos':
+		max_ylim = 25.
+	else:
+		max_ylim = 1.
+	column = column_tex.lower().replace(' ', '_')
+	variable_to_title = {'Max Valid Nesting Depth' : 'Maximum Nesting Depth', 'Error Pos' : 'Error Position', 'Predictions' : 'Output Layer Activation', 'LRD':'Experiment 1', 'ND':'Experiment 2'}
 	
-x = np.arange(len(columns_analysis))
-width = 0.15
+	columns_analysis = [column]
+	corpora = ['base', 'low', 'high']
+	networks = ['SRNN', 'LSTM', 'GRU']
+	networks_tex = [r'SRNN', r'LSTM', r'GRU']
+	values = []
+	for corpus in corpora:
+		corp_values = []
+		for network in networks:
+			#network_values = []
+			value = df.loc[df.experiment == experiment].loc[df.network == network].loc[df.corpus == corpus].loc[df.performance == performance].describe().loc['mean', column]
+			value = np.nan_to_num(value)
+			print(value, corpus, column, network)
+			corp_values.append(value)
+		values.append(corp_values)
+	print(values)
+	print(len(values))
+	width = 0.25
+	x = np.arange(len(networks_tex))
 
-fig, ax = plt.subplots()
-rects1 = ax.bar(x - width/3, values[0], width, label='base')
-rects2 = ax.bar(x + width/3, values[1], width, label='low')
-rects3 = ax.bar(x + 2*width/3, values[2], width, label='high')
+	fig, ax = plt.subplots()
+	
+	rects1 = ax.bar(x - width, values[0], width, label='base')
+	rects2 = ax.bar(x, values[1], width, label='low')
+	rects3 = ax.bar(x + width, values[2], width, label='high')
+	
+	rects = [rects1, rects2, rects3]
+	# Add some text for labels, title and custom x-axis tick labels, etc.
+	ax.set_ylabel(r'Mean {}'.format(variable_to_title[column_tex]))
+	ax.set_title(r'{}: {} Performance of {} Outliers'.format(variable_to_title[experiment], variable_to_title[column_tex], performance.capitalize()))
+	ax.set_xticks(x)
+	ax.set_xticklabels(networks_tex)
+	ax.legend(loc='upper center', ncol=3)
 
-# Add some text for labels, title and custom x-axis tick labels, etc.
-ax.set_ylabel(column)
-ax.set_title(column)
-ax.set_xticks(x)
-ax.set_xticklabels(columns_analysis)
-ax.legend()
 
+	def autolabel(rects):
+		"""As long as bar height isn't 0, attach a text label above each bar in *rects*, displaying its height."""
+		for rect in rects:
+			height = rect.get_height()
+			if height == 0.0:
+				continue
+			else:
+				ax.annotate('{:.3f}'.format(height),
+							xy=(rect.get_x() + rect.get_width() / 2, height),
+							xytext=(0, 3),  # 3 points vertical offset
+							textcoords="offset points",
+							ha='center', va='bottom')
 
-def autolabel(rects):
-	"""Attach a text label above each bar in *rects*, displaying its height."""
 	for rect in rects:
-		height = rect.get_height()
-		ax.annotate('{}'.format(height),
-					xy=(rect.get_x() + rect.get_width() / 2, height),
-					xytext=(0, 3),  # 3 points vertical offset
-					textcoords="offset points",
-					ha='center', va='bottom')
+		autolabel(rect)
+		
+	axes = plt.gca()
+	axes.set_ylim([0., max_ylim])
 
+	fig.tight_layout()
+	
+	plot_out = os.path.join('..', 'latex', 'fig', '{}_{}_{}.pdf'.format(experiment, column, performance))
+	plt.savefig(plot_out, bbox_inches='tight')
+	return fig
+	# save as PDF
 
-autolabel(rects1)
-autolabel(rects2)
-autolabel(rects3)
+def count_error_types(fp, experiment, network, corpus, performance):
+	open = fp.loc[fp.experiment == experiment].loc[fp.network == network].loc[fp.corpus == corpus].loc[fp.performance == performance].loc[fp.error == 'open'].count()[1]
+	closed = fp.loc[fp.experiment == experiment].loc[fp.network == network].loc[fp.corpus == corpus].loc[fp.performance == performance].loc[fp.error == 'closed'].count()[1]
+	total = open + closed
+	if total:
+		if open or closed:
+			ratio = open/closed
+		else:
+			ratio = np.nan
+		print(experiment, network, corpus, performance)
+		print("open,closed,ratio,total")
+		print("{},{},{},{}".format(open, closed, ratio, total))
 
-fig.tight_layout()
+# PLOTTING
+pred_lrd = plot_results(fp, 'LRD', 'Predictions', 'bad')
+pred_lrd = plot_results(fp, 'LRD', 'Max Valid Nesting Depth', 'bad')
+pred_lrd = plot_results(fp, 'LRD', 'Error Pos', 'bad')
+pred_lrd = plot_results(fp, 'LRD', 'Predictions', 'good')
+pred_lrd = plot_results(fp, 'LRD', 'Max Valid Nesting Depth', 'good')
+pred_lrd = plot_results(fp, 'LRD', 'Error Pos', 'good')
+pred_lrd = plot_results(fp, 'ND', 'Predictions', 'bad')
+pred_lrd = plot_results(fp, 'ND', 'Max Valid Nesting Depth', 'bad')
+pred_lrd = plot_results(fp, 'ND', 'Error Pos', 'bad')
+pred_lrd = plot_results(fp, 'ND', 'Predictions', 'good')
+pred_lrd = plot_results(fp, 'ND', 'Max Valid Nesting Depth', 'good')
+pred_lrd = plot_results(fp, 'ND', 'Error Pos', 'good')
 
-plt.show()
+experiments = ['LRD', 'ND']
+networks = ['SRNN', 'LSTM', 'GRU']
+corpora = ['base', 'low', 'high']
+for experiment in experiments:
+	for corpus in corpora:
+		for network in networks:
+			count_error_types(fp, experiment, network, corpus, 'good')
+for experiment in experiments:
+	for corpus in corpora:
+		for network in networks:
+			count_error_types(fp, experiment, network, corpus, 'bad')
+
+#lstm_lrd = plot_results(fp, 'LRD', 'LSTM', 'bad')
+#plt.show()
+#srnn_lrd = plot_results(fp, 'LRD', 'SRNN', 'bad')
+#plt.show()
 
 # 1. Determine which networks qualify for closer scrutiny (best performers, worst performers)
 # Iterate through all detail files
