@@ -321,31 +321,31 @@ def count_error_types(fp, experiment, network, corpus, performance):
 	closed = fp.loc[fp.experiment == experiment].loc[fp.network == network].loc[fp.corpus == corpus].loc[fp.performance == performance].loc[fp.error == 'closed'].count()[1]
 	total = open + closed
 	if total:
-		if open or closed:
+		if closed:
 			ratio = open/closed
 		else:
-			ratio = np.nan
-		print(experiment, network, corpus, performance)
-		print("open,closed,ratio,total")
-		print("{},{},{},{}".format(open, closed, ratio, total))
+			ratio = np.inf
+		
+		print("{},{},{},{},{},{},{},{}".format(network, experiment, corpus, performance, open, closed, ratio, total))
 
 # PLOTTING
-pred_lrd = plot_results(fp, 'LRD', 'Predictions', 'bad')
-pred_lrd = plot_results(fp, 'LRD', 'Max Valid Nesting Depth', 'bad')
-pred_lrd = plot_results(fp, 'LRD', 'Error Pos', 'bad')
-pred_lrd = plot_results(fp, 'LRD', 'Predictions', 'good')
-pred_lrd = plot_results(fp, 'LRD', 'Max Valid Nesting Depth', 'good')
-pred_lrd = plot_results(fp, 'LRD', 'Error Pos', 'good')
-pred_lrd = plot_results(fp, 'ND', 'Predictions', 'bad')
-pred_lrd = plot_results(fp, 'ND', 'Max Valid Nesting Depth', 'bad')
-pred_lrd = plot_results(fp, 'ND', 'Error Pos', 'bad')
-pred_lrd = plot_results(fp, 'ND', 'Predictions', 'good')
-pred_lrd = plot_results(fp, 'ND', 'Max Valid Nesting Depth', 'good')
-pred_lrd = plot_results(fp, 'ND', 'Error Pos', 'good')
+# pred_lrd = plot_results(fp, 'LRD', 'Predictions', 'bad')
+# pred_lrd = plot_results(fp, 'LRD', 'Max Valid Nesting Depth', 'bad')
+# pred_lrd = plot_results(fp, 'LRD', 'Error Pos', 'bad')
+# pred_lrd = plot_results(fp, 'LRD', 'Predictions', 'good')
+# pred_lrd = plot_results(fp, 'LRD', 'Max Valid Nesting Depth', 'good')
+# pred_lrd = plot_results(fp, 'LRD', 'Error Pos', 'good')
+# pred_lrd = plot_results(fp, 'ND', 'Predictions', 'bad')
+# pred_lrd = plot_results(fp, 'ND', 'Max Valid Nesting Depth', 'bad')
+# pred_lrd = plot_results(fp, 'ND', 'Error Pos', 'bad')
+# pred_lrd = plot_results(fp, 'ND', 'Predictions', 'good')
+# pred_lrd = plot_results(fp, 'ND', 'Max Valid Nesting Depth', 'good')
+# pred_lrd = plot_results(fp, 'ND', 'Error Pos', 'good')
 
 experiments = ['LRD', 'ND']
 networks = ['SRNN', 'LSTM', 'GRU']
 corpora = ['base', 'low', 'high']
+print(",,,,open,closed,ratio,total")
 for experiment in experiments:
 	for corpus in corpora:
 		for network in networks:
