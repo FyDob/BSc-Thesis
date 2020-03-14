@@ -49,8 +49,6 @@ Wrong words with superfluous open brackets have shown to be the most difficult t
 
 To investigate properties of wrongly classified words, I scrutinize false positives for two word properties. I chose the properties as proxy values for word complexity: the maximum nesting depth of the word, and the position of the error within the word. Since all words within an experiment have the same length, variation in complexity can only arise through structural differences - like a deeper underlying parse tree. The values were averaged across all model instances with the same architecture and training corpus for reasons of simplicity, i.e. the results of both good base GRU outliers in Experiment 1 were merged. A low value in mean error position means that the model tended to misclassify words where the error occured early on in the word, while a high value means that the error occured later. Maximum nesting depth is an overall measure of complexity for the word, and refers to the deepest nesting level within the word. It is unrelated to the error position. Again, a low value means that the model predominantly misclassified words with a low nesting depth.
 
-
-
 \begin{figure}[!tbp]
 	\begin{minipage}{\textwidth}
      \centering
@@ -70,8 +68,22 @@ To investigate properties of wrongly classified words, I scrutinize false positi
      \subcaption{Properties of false positives in Experiment 2.}
      \label{fig:FP_Prop_ND}
    \end{minipage}\\
-  \caption{Properties of false positives as classified by different architectures.}
+  \caption{Properties of false positives as classified by different architectures. A missing architecture/training corpus combination means that none of these models scored an accuracy outside of $50 \pm  5\%$, and were not included in this analysis.}
 \end{figure}
+%TODO rename XY Performance to Average XY for Good/Bad Outliers in
+% - figures
+% - text
+%TODO capitalize base/low/high in Figure legends
+%TODO capitalize Experiment 1/Experiment 2 in
+% - captions
+% - text
+%TODO confusion matrix?
+
+As can be seen in Figure \ref{fig:FP_Prop_LRD}, there is a notable difference in average error position, not just between High and Low Accuracy models, but also between architectures and training corpora. The value tends to be highest for models trained on the High LRD corpus, followed by models trained on the Low LRD corpus. The highest accuracy model for Experiment 1 was Base LSTM-8 with an accuracy of $91.00\%$. This model misclassified words with the earliest error occurrence, setting in at $4.417$. For Maximum Nesting Depth, there is no significant difference between training corpus and models, save for a massive spike for Base LSTM-8. Comparing High and Low Accuracy models shows mostly lower Average Error Position values, with the GRU models being notable exemptions to the rule. Low Accuracy models tend to misclassify more complex words.
+
+For Experiment 2, Figure \ref{fig:FP_Prop_ND} shows stark differences in Average Error Position depending on the training corpus. All models trained on the Low LRD corpus misclassify words with a higher Average Error Position than models trained on the Base corpus. As in Experiment 1, the best performing model (Base LSTM-128) scores the lowest Average Error Position and the highest Average Nesting Depth. Comparing High and Low Accuracy models, the Low Accuracy models achieve drastically lower Average Error Positions and slightly lower Average Maximum Nesting Depth.
+
+These values provide little conclusive insight into what properties characterize a successful model. However, they do illustrate an overall altered performance depending on which corpus the model was trained on, indicating that the complexity of the input data has an impact on how the model evaluates unseen, more complex data.
 
 % THIS GOES IN DISCUSSION
 %While all these words were misclassified, a strong effect of word complexity still implies that the models process the linear input in a structural manner. They may not have learned an accurate representation of $D_{2}$, but they are likely to have learned a structured approximation.
