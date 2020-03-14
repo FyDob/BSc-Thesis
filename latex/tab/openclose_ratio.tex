@@ -1,0 +1,40 @@
+\begin{table}
+\begin{tabularx}{\textwidth}{@{}l*{10}{C}c@{}}
+\toprule
+  \textit{Architecture} & \textit{Experiment} & \textit{Training Corpus} & \textit{Open} & \textit{Closed} & \textit{Ratio} & \textit{Total} \\
+\midrule
+\multicolumn{7}{c}{High Accuracy Models} \\
+\toprule
+LSTM & LRD & base & $18{,}161$ & 0 & $\inf$ & $18{,}161$ \\
+GRU & LRD & base & $55{,}256$ & $45{,}207$ & 1.222 & $100{,}463$ \\
+SRNN & LRD & low & $101{,}557$ & $150{,}905$ & 0.673 & $252{,}462$ \\
+LSTM & LRD & low & $39{,}584$ & $39{,}559$ & 1.001 & $79{,}143$ \\
+GRU & LRD & low & $165{,}820$ & $115{,}236$ & 1.439 & $281{,}056$ \\
+GRU & LRD & high & $43{,}497$ & $86{,}753$ & 0.501 & $130{,}250$ \\
+\midrule
+SRNN & ND & base & $138{,}673$ & $240{,}098$ & 0.578 & $378{,}771$ \\
+LSTM & ND & base & $103{,}816$ & 0 & $\inf$ & $103{,}816$ \\
+GRU & ND & base & $244{,}265$ & $34{,}843$ & 7.010 & $279{,}108$ \\
+SRNN & ND & low & $94{,}602$ & $194{,}386$ & 0.487 & $288{,}988$ \\
+LSTM & ND & low & $97{,}527$ & $74{,}625$ & 1.307 & $172{,}152$ \\
+GRU & ND & low & $82{,}933$ & $34{,}981$ & 2.371 & $117{,}914$ \\
+SRNN & ND & high & $90{,}850$ & $50{,}458$ & 1.801 & $141{,}308$ \\
+\midrule
+\multicolumn{7}{c}{Low Accuracy Models} \\
+\toprule
+SRNN & LRD & base & $228{,}451$ & $4{,}387$ & 52.075 & $232{,}838$ \\
+LSTM & LRD & base & $298{,}547$ & $11{,}358$ & 26.285 & $309{,}905$ \\
+GRU & LRD & base & $29{,}908$ & $73{,}284$ & 0.408 & $103{,}192$ \\
+LSTM & LRD & low & $222{,}045$ & 0 & $\inf$ & $222{,}045$ \\
+LSTM & LRD & high & $338{,}852$ & 387 & 875.587 & $339{,}239$ \\
+GRU & LRD & high & 0 & $157{,}850$ & 0.000 & $157{,}850$ \\
+\midrule
+SRNN & ND & base & $307{,}497$ & $29{,}619$ & 10.382 & $337{,}116$ \\
+SRNN & ND & low & $116{,}613$ & $15{,}213$ & 7.665 & $131{,}826$ \\
+LSTM & ND & low & $234{,}224$ & 0 & $\inf$ & $234{,}224$ \\
+LSTM & ND & high & $214{,}980$ & 0 & $\inf$ & $214{,}980$ \\
+\bottomrule
+\end{tabularx}
+\caption[Ratio of open/closed error categories misclassified as false positives.]{Ratio of open/closed error categories misclassified as false positives.}
+\label{tab:opencloseRatios}
+\end{table}
