@@ -70,25 +70,9 @@
 % Create index if makeidx is enabled
 \makeindex
 % Enable listings for code/pseudocode
-%\usepackage{listings}
-%\lstset{numbers=left, numberstyle=\tiny, numbersep=5pt, keywordstyle=\color{black}\bfseries, stringstyle=\ttfamily,showstringspaces=false,basicstyle=\footnotesize,captionpos=b}
-%\lstset{language=python}
-
-% List of Abbreviations -- does not work so far
-\usepackage[english]{nomencl}
-\let\abbrev\nomenclature
-% Create index of abbreviations
-\makenomenclature
-% Abkürzungsverzeichnis LiveTex Version
-% Title
-\renewcommand{\nomname}{List of Abbreviations}
-% Space between abbreviation and explanation
-\setlength{\nomlabelwidth}{.25\textwidth}
-% Fill space with dots
-\renewcommand{\nomlabel}[1]{#1 \dotfill}
-% Space between abbreviations
-\setlength{\nomitemsep}{-\parsep}
-\makeglossary
+\usepackage{listings}
+\lstset{numbers=left, numberstyle=\tiny, numbersep=5pt, keywordstyle=\color{black}\bfseries, stringstyle=\ttfamily,showstringspaces=false,basicstyle=\footnotesize,captionpos=b}
+\lstset{language=python}
 
 % Enable linguistic glossing and more. Always load last!!!
 \usepackage{gb4e}
@@ -125,21 +109,16 @@
 \newpage
 \tableofcontents
 % INDEX OF FIGURES - IN ToC %
-\addcontentsline{toc}{section}{Index of Figures}
+\addcontentsline{toc}{section}{List of Figures}
 \listoffigures
 % INDEX OF TABLES - IN ToC %
-\addcontentsline{toc}{section}{Index of Tables}
+\addcontentsline{toc}{section}{List of Tables}
 \listoftables
 % INDEX OF LISTINGS - IN ToC %
-%\addcontentsline{toc}{section}{Index of Listings}
-%\fancyhead[L]{Index of Figures/Tables/Listings}
-%\renewcommand{\lstlistlistingname}{Index of Listings}
-%\lstlistoflistings
-% LIST OF ABBREVIATIONS - IN ToC %
-\addcontentsline{toc}{section}{List of Abbreviations}
-\fancyhead[L]{List of Abbreviations}
-\input{settings/abbreviations/abbreviations}
-\printnomenclature[3cm]
+\addcontentsline{toc}{section}{List of Listings}
+\fancyhead[L]{Index of Figures/Tables/Listings}
+\renewcommand{\lstlistlistingname}{Index of Listings}
+\lstlistoflistings
 
 
 %%%%%%% MAIN BODY %%%%%%%%%%%%

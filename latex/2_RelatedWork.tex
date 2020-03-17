@@ -15,7 +15,7 @@ Formal grammars differ in terms of complexity and can be described in a hierarch
 	\node[circ, opacity=0.15, minimum width=7cm, above=0cm of Reg.south, label={[label distance=-1.95cm, align=center]90:Context Free \\ (Type 1)}]  (CSG) {};
 	\node[circ, opacity=0.1, minimum width=9cm, above=0cm of Reg.south, label={[label distance=-1.95cm, align=center]90:Turing Equivalent \\ (Type 0)}] (CSG) {};
 	\end{tikzpicture}
-	\caption[Chomsky Hierarchy]{A visual representation of the Chomsky Hierarchy.}
+	\caption[The Chomsky Hierarchy]{A visual representation of the Chomsky Hierarchy.}
 \label{fig:ChomskyHierarchy}
 \end{figure}
 
@@ -179,7 +179,7 @@ When training RNNs, it is beneficial to think of the network as unfolding into a
 	\draw[-latex] (h_t+1) -- (dots2) node[midway, above]  {\small $\boldsymbol{W_{hh}}$};
 	\end{tikzpicture}
  	\centering
- 	\caption[Unfolded RNN]{An RNN, unfolded through time.}
+ 	\caption[Illustration of an unfolded RNN]{An RNN, unfolded through time.}
 	\label{fig:unrolledRNN}
 \end{figure}
 
@@ -285,7 +285,7 @@ h_{t} &= \text{out}_{t} \odot \tanh (C_{t})
    \draw[-latex] (mult_h) -- (h_t-1_h);
    
 \end{tikzpicture}
-	\caption[LSTM Memory Cell]{An LSTM memory cell.}
+	\caption[Illustration of an LSTM Memory Cell]{An LSTM memory cell.}
 	\label{fig:memoryCellLSTM}
 \end{figure}
 
