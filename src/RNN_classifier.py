@@ -1,10 +1,5 @@
-# Training, testing and experimenting on RNN models for Fynn Dobler's Bachelor's Thesis.
-# - Preprocessing data
-# - Building models
-# - Training and testing models with a train/val/test split
-# - Saving models
-# - Saving loss, accuracy on test split
-# - Saving loss, accuracy on experiment data
+# RNN_classifier.py
+# Training, testing and experimenting on RNN models
 
 import os
 import sys
@@ -29,7 +24,7 @@ NETWORK = sys.argv[2]
 HIDDEN_UNITS = int(sys.argv[3])
 CORPUS = sys.argv[4]
 EXPERIMENT = sys.argv[5]
-EPOCHS = 1#100
+EPOCHS = 100
 TEST_SIZE = 0.2
 VOCAB_SIZE = 7 # 6 characters + 1 do combat off by 1 error in Embedding Layer
 MAX_LEN = ((20-2)*2)+1+2 # Maximum length of words in all corpora and experiments -- LRD length formula
@@ -84,25 +79,6 @@ def prepare_training_data(df, max_word_length=MAX_LEN):
 	X_test = sequence.pad_sequences(test_sequences,maxlen=MAX_LEN)
 	
 	return X_train, X_test, Y_train, Y_test, tok
-	
-# def prepare_training_data_NOSPLIT(dataframe, max_word_length):
-	'''Prepares training data without a train_test_split.'''
-	# df = filter_length(dataframe, max_word_length)
-	# X = df.word
-	# Y = df.value
-	# le = LabelEncoder()
-	# Y = le.fit_transform(Y)
-	# Y = Y.reshape(-1,1)
-
-	# X_train = X
-	# Y_train = Y
-
-	# tok = Tokenizer(char_level=True)
-	# tok.fit_on_texts(X_train)
-	# sequences = tok.texts_to_sequences(X_train)
-	# sequences_matrix = sequence.pad_sequences(sequences,maxlen=MAX_LEN)
-	
-	# return sequences_matrix, Y_train, tok
 
 def prepare_experiment_data(dataframe, tok, max_word_length=MAX_LEN):
 	'''Preprocesses experiment data by splitting it into train/test and transforming the strings into sequences of numbers.
@@ -129,6 +105,7 @@ def prepare_experiment_data(dataframe, tok, max_word_length=MAX_LEN):
 	return X, Y
 
 # ============ MODELS ============
+
 def build_model(layer_size=HIDDEN_UNITS, network=NETWORK, vocabulary=VOCAB_SIZE, max_len=MAX_LEN):
 	'''Creates a LSTM, GRU or SRNN based model with a specified number of hidden units.
 		args:
@@ -217,7 +194,6 @@ def train_test():
 			none
 		returns:
 			none'''
-	#X_train, Y_train, tokenizer = prepare_training_data_NOSPLIT(CORPUS_DF, max_word_length) #len8 experiment
 	# Preprocessing
 	X_train, X_test, Y_train, Y_test, tokenizer = prepare_training_data(CORPUS_DF)
 

@@ -1,12 +1,8 @@
-# Script to explore model performance
-# - How many models >= 50%?
-# - How many models < 50%?
-# - SRNN performance (regardless of experiment, corpus)
-# - LSTM performance (regardless of experiment, corpus)
-# - GRU performance (regardless of experiment, corpus)
-# - high performance (regardless of experiment, network)
-# - base performance (regardless of experiment, network)
-# - low performance (regardless of experiment, network)
+# analyze_performance.py
+# Functions to prepare network predictions for further analysis.
+# Creates dataframes collecting the predictions of all outlier networks for error analysis.
+# Only false positives were discussed in this thesis.
+# To be used as 'python analyze_performance.py > some_outfile.csv'
 
 import os
 import pandas as pd
@@ -15,51 +11,18 @@ import tensorflow as tf
 from tensorflow.keras.preprocessing.text import Tokenizer
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
 import numpy as np
 
-MAX_LEN = ((20-2)*2)+1+2 # Maximum length of words in all corpora and experiments -- LRD length formula
-
-# def filter_length(df, max_len_train=MAX_LEN):
-	# '''Filters words of length > max_len_train out of a dataframe.
-		# args:
-			# df: pd.DataFrame of words
-			# max_len_train: Maximum length words in df should have
-		# returns:
-			# df: pd.DataFrame of words'''
-	# mask = (df['word'].str.len() <= max_len_train)
-	# df = df.loc[mask]
-	
-	# return df
-	
-# def get_tokenizer_config(training_df):
-	# '''Preprocesses training data by splitting it into train/test and transforming the strings into sequences of numbers.
-		# args:
-			# df: pd.DataFrame of words
-			# max_word_length: Maximum wanted length of words
-		# returns:
-			# tok.get_config: Configuration of tokenizer fitted on training corpus, to be used on experiment corpus; returned as dict'''
-	# training_df = filter_length(training_df)
-	# X = training_df.word
-	# Y = training_df.value
-	# # Encode target values
-	# le = LabelEncoder()
-	# Y = le.fit_transform(Y)
-	# Y = Y.reshape(-1,1)
-
-	# X_train_temp,X_test_temp,Y_train,Y_test = train_test_split(X,Y,test_size=0.2) # == TEST_SIZE in RNN_classifier.py
-
-	# # Preprocess words into sequences of numbers corresponding to the characters
-	# tok = Tokenizer(char_level=True)
-	# tok.fit_on_texts(X_train_temp)
-	
-	# return tok.get_config() # dict of config
-
 def numbers_to_words(corpus, experiment, network, hidden_units):
-	# TODO: Comment, clean up
-	# TODO: split into 2 functions -> numbers2words, file2df
 	'''Cleans up the saved detailed RNN predictions by removing additional characters and
-	translating character indices back to legible strings.'''
+	translating character indices back to legible strings.
+			args:
+				corpus: string, name of the corpus
+				experiment: string, name of the experiment
+				network: string, name of the network architecture
+				hidden_units: int, number of hidden units
+			returns:
+				data_matrix: list of clean data, ready to be turned into a pd.DataFrame'''
 	detail_file = os.path.join('..', 'exp_results', corpus, experiment, 'detail_{}_{}.csv'.format(network, hidden_units))
 	training_df = pd.read_csv('../training/{}.csv'.format(corpus),delimiter=',',encoding='latin-1')
 	
@@ -89,10 +52,10 @@ def numbers_to_words(corpus, experiment, network, hidden_units):
 
 def prepare_dataframe(corpus, experiment, network, hidden_units, GLOBAL_WORDS):
 	'''Processes the data_matrix from numbers_to_words into a pd.DataFrame for further analysis.
-		args:
-			detail_file: Path to a prediction-per-word file
-		returns:
-			df: pd.DataFrame with all columns relevant for analysis'''
+			args:
+				detail_file: Path to a prediction-per-word file
+			returns:
+				df: pd.DataFrame with all columns relevant for analysis'''
 	data_matrix = numbers_to_words(corpus, experiment, network, hidden_units)
 	df = pd.DataFrame(data_matrix, columns=['words', 'predictions', 'golds'])
 	df['words'] = GLOBAL_WORDS
@@ -111,12 +74,12 @@ def prepare_dataframe(corpus, experiment, network, hidden_units, GLOBAL_WORDS):
 
 def measure_performance(results):
 	'''Calculates precision, recall and F1 score of a dataframe containing predictions and gold labels.
-		args:
-			results: Dataframe containing predictions and gold labels
-		returns:
-			precision: TPs/(TPs+FPs)
-			recall: TPs/(TPs+FNs)
-			f1_score: 2*((precision*recall)/(precision+recall))'''
+			args:
+				results: Dataframe containing predictions and gold labels
+			returns:
+				precision: TPs/(TPs+FPs)
+				recall: TPs/(TPs+FNs)
+				f1_score: 2*((precision*recall)/(precision+recall))'''
 	true_pos = len(results.loc[results.golds == 1].loc[results.predictions >= 0.5])
 	false_pos = len(results.loc[results.golds == 0].loc[results.predictions >= 0.5])
 	true_neg = len(results.loc[results.golds == 0].loc[results.predictions < 0.5])
@@ -133,6 +96,31 @@ def measure_performance(results):
 		else:
 			f1_score = 2.*((precision*recall)/(precision+recall))
 	return precision, recall, f1_score
+	
+def extend_performance_measures():
+	'''Iterates through all files containing experiment results (accuracy, loss) and their corresponding detail files, which contain every single word, prediction and gold label. From that, precision, recall and F1 score are calculated and added to the experiment results file.
+			args:
+				none
+			returns:
+				none'''
+	corpora = ['base', 'high', 'low']
+	experiments = ['LRD', 'ND']
+	networks = ['SRNN', 'GRU', 'LSTM']
+	for corpus in corpora:
+		for experiment in experiments:
+			for network in networks:
+				for hidden_units in [2**i for i in range(1,10)]:
+					# Appending precision, recall, f1_score to sparse_file
+					detail_file = os.path.join('..', 'exp_results', corpus, experiment, 'detail_{}_{}.csv'.format(network, str(hidden_units)))
+					sparse_file = os.path.join('..', 'exp_results', corpus, experiment, '{}_{}.csv'.format(network, str(hidden_units)))
+					sparse = pd.read_csv(sparse_file)
+					# Processing values in the details file to calculate additional performance measures
+					details = numbers_to_words(detail_file)
+					precision, recall, f1_score = measure_performance(details)
+					sparse['precision'], sparse['recall'], sparse['f1_score'] = precision, recall, f1_score
+					sparse.to_csv(sparse_file, index=False)
+					# Saving the extended values
+					prepend_header(detail_file)
 	
 def breakdownPredictions(df, corpus, experiment, network, hidden_units, performance):
 	'''Transforms a full dataframe of word-prediction-gold_label data into 4 dataframes specific to a single model: true positives, false positives, true negatives and false negatives.
@@ -179,6 +167,7 @@ def prepend_header(detail_file):
 	f.close()
 
 def create_mega_df():
+	'''Creates and saves four dataframes containing every single word, prediction and gold label for every outlier model (accuracy >55%/<45%), split into true positives, false positives, true negatives and false negatives.'''
 	global_words_LRD = numbers_to_words('base', 'LRD', 'LSTM', '8')
 	df = pd.DataFrame(global_words_LRD, columns=['words', 'predictions', 'golds'])
 	GLOBAL_WORDS_LRD = df['words']
@@ -205,8 +194,10 @@ def create_mega_df():
 		'low ND SRNN 4 bad', 'low ND LSTM 32 bad',
 		'high ND SRNN 16 good',
 		'high ND LSTM 64 bad']
+		
 	for entry in networks:
 		corpus, experiment, network, hidden_units, performance = entry.split()
+		# Set translation table for numbers_to_words
 		if experiment == 'LRD':
 			GLOBAL_WORDS = GLOBAL_WORDS_LRD
 		else:
@@ -217,13 +208,13 @@ def create_mega_df():
 		false_positives_frames.append(false_positives)
 		true_negatives_frames.append(true_negatives)
 		false_negatives_frames.append(false_negatives)
-		print("{} DONE!".format(entry))
+	# Concatenate all results
 	mega_true_positives = pd.concat(true_positives_frames)
 	mega_false_positives = pd.concat(false_positives_frames)
 	mega_true_negatives = pd.concat(true_negatives_frames)
 	mega_false_negatives = pd.concat(false_negatives_frames)
-	print(mega_false_positives.loc[mega_false_positives.performance == 'good'].describe())
-	print(mega_false_positives.loc[mega_false_positives.performance == 'bad'].describe())
+
+	# Save results
 	tp_out = os.path.join('..','results','mega_true_positives.csv')
 	fp_out = os.path.join('..','results','mega_false_positives.csv')
 	tn_out = os.path.join('..','results','mega_true_negatives.csv')
@@ -233,103 +224,15 @@ def create_mega_df():
 	mega_true_negatives.to_csv(tn_out)
 	mega_false_negatives.to_csv(fn_out)	
 
-create_mega_df()
-
-# DETAILLED
-# detail_file = os.path.join('..', 'exp_results', 'base', 'LRD', 'detail_{}_{}.csv'.format('LSTM', '8')) # 91% accuracy LRD
-# #sparse_file = os.path.join('..', 'exp_results', 'base', 'LRD', '{}_{}.csv'.format('SRNN', '16')) # 27% accuracy LRD
-# #sparse = pd.read_csv(sparse_file)
-# details = prepare_dataframe(detail_file)
-# print(details.head())
-# breakdownPredictions(details)
-#print(details.loc[details.error == 'closed'].describe())
-#print(details.loc[details.error == 'open'].head())
-#print(details.error.value_counts())
-
-# good: all networks with experiment accuracy > 55%
-# bad: all networks with experiment accuracy < 45%
-tp_in = os.path.join('..','results','mega_true_positives.csv')
-fp_in = os.path.join('..','results','mega_false_positives.csv')
-tn_in = os.path.join('..','results','mega_true_negatives.csv')
-fn_in = os.path.join('..','results','mega_false_negatives.csv')
-#tp = pd.read_csv(tp_in)
-fp = pd.read_csv(fp_in)
-#tn = pd.read_csv(tn_in)
-#fn = pd.read_csv(fn_in)
-
-def plot_results(df, experiment, column_tex, performance):
-	plt.rc('text', usetex=True)
-	plt.rc('font', family='serif')
-	if column_tex == 'Max Valid Nesting Depth':
-		max_ylim = 15.
-	elif column_tex == 'Error Pos':
-		max_ylim = 25.
-	else:
-		max_ylim = 1.
-	column = column_tex.lower().replace(' ', '_')
-	variable_to_title = {'Max Valid Nesting Depth' : 'Maximum Nesting Depth', 'Error Pos' : 'Error Position', 'Predictions' : 'Output Layer Activation', 'LRD':'Experiment 1', 'ND':'Experiment 2'}
-	
-	columns_analysis = [column]
-	corpora = ['base', 'low', 'high']
-	networks = ['SRNN', 'LSTM', 'GRU']
-	networks_tex = [r'SRNN', r'LSTM', r'GRU']
-	values = []
-	for corpus in corpora:
-		corp_values = []
-		for network in networks:
-			#network_values = []
-			value = df.loc[df.experiment == experiment].loc[df.network == network].loc[df.corpus == corpus].loc[df.performance == performance].describe().loc['mean', column]
-			value = np.nan_to_num(value)
-			print(value, corpus, column, network)
-			corp_values.append(value)
-		values.append(corp_values)
-	print(values)
-	print(len(values))
-	width = 0.25
-	x = np.arange(len(networks_tex))
-
-	fig, ax = plt.subplots()
-	
-	rects1 = ax.bar(x - width, values[0], width, label='base')
-	rects2 = ax.bar(x, values[1], width, label='low')
-	rects3 = ax.bar(x + width, values[2], width, label='high')
-	
-	rects = [rects1, rects2, rects3]
-	# Add some text for labels, title and custom x-axis tick labels, etc.
-	ax.set_ylabel(r'Mean {}'.format(variable_to_title[column_tex]))
-	ax.set_title(r'{}: {} Performance of {} Outliers'.format(variable_to_title[experiment], variable_to_title[column_tex], performance.capitalize()))
-	ax.set_xticks(x)
-	ax.set_xticklabels(networks_tex)
-	ax.legend(loc='upper center', ncol=3)
-
-
-	def autolabel(rects):
-		"""As long as bar height isn't 0, attach a text label above each bar in *rects*, displaying its height."""
-		for rect in rects:
-			height = rect.get_height()
-			if height == 0.0:
-				continue
-			else:
-				ax.annotate('{:.3f}'.format(height),
-							xy=(rect.get_x() + rect.get_width() / 2, height),
-							xytext=(0, 3),  # 3 points vertical offset
-							textcoords="offset points",
-							ha='center', va='bottom')
-
-	for rect in rects:
-		autolabel(rect)
-		
-	axes = plt.gca()
-	axes.set_ylim([0., max_ylim])
-
-	fig.tight_layout()
-	
-	plot_out = os.path.join('..', 'latex', 'fig', '{}_{}_{}.pdf'.format(experiment, column, performance))
-	plt.savefig(plot_out, bbox_inches='tight')
-	return fig
-	# save as PDF
-
 def count_error_types(fp, experiment, network, corpus, performance):
+	'''Determines number of open/closed bracket error words in a dataframe.
+			args:
+				fp: dataframe containing either false positives or true negatives (since other categories do not have incorrect words)
+				experiment: string, name of the experiment
+				network: string, name of the network architecture
+				hidden_units: int, number of hidden units
+			returns:
+				none'''
 	open = fp.loc[fp.experiment == experiment].loc[fp.network == network].loc[fp.corpus == corpus].loc[fp.performance == performance].loc[fp.error == 'open'].count()[1]
 	closed = fp.loc[fp.experiment == experiment].loc[fp.network == network].loc[fp.corpus == corpus].loc[fp.performance == performance].loc[fp.error == 'closed'].count()[1]
 	total = open + closed
@@ -341,58 +244,22 @@ def count_error_types(fp, experiment, network, corpus, performance):
 		
 		print("{},{},{},{},{},{},{},{}".format(network, experiment, corpus.capitalize(), performance, open, closed, total, ratio))
 
-# PLOTTING
-# pred_lrd = plot_results(fp, 'LRD', 'Predictions', 'bad')
-# pred_lrd = plot_results(fp, 'LRD', 'Max Valid Nesting Depth', 'bad')
-# pred_lrd = plot_results(fp, 'LRD', 'Error Pos', 'bad')
-# pred_lrd = plot_results(fp, 'LRD', 'Predictions', 'good')
-# pred_lrd = plot_results(fp, 'LRD', 'Max Valid Nesting Depth', 'good')
-# pred_lrd = plot_results(fp, 'LRD', 'Error Pos', 'good')
-# pred_lrd = plot_results(fp, 'ND', 'Predictions', 'bad')
-# pred_lrd = plot_results(fp, 'ND', 'Max Valid Nesting Depth', 'bad')
-# pred_lrd = plot_results(fp, 'ND', 'Error Pos', 'bad')
-# pred_lrd = plot_results(fp, 'ND', 'Predictions', 'good')
-# pred_lrd = plot_results(fp, 'ND', 'Max Valid Nesting Depth', 'good')
-# pred_lrd = plot_results(fp, 'ND', 'Error Pos', 'good')
+def print_bracket_ratio_table():
+	'''Creates a table splitting false positives into open/closed error types for each outlier network, sorted by 'good' and 'bad' outliers.'''
+	fp_in = os.path.join('..','results','mega_false_positives.csv')
+	fp = pd.read_csv(fp_in)
+	experiments = ['LRD', 'ND']
+	networks = ['SRNN', 'LSTM', 'GRU']
+	corpora = ['base', 'low', 'high']
+	print("network,experiment,corpus,performance,open,closed,total,ratio")
+	for experiment in experiments:
+		for corpus in corpora:
+			for network in networks:
+				count_error_types(fp, experiment, network, corpus, 'good')
+	for experiment in experiments:
+		for corpus in corpora:
+			for network in networks:
+				count_error_types(fp, experiment, network, corpus, 'bad')	
 
-experiments = ['LRD', 'ND']
-networks = ['SRNN', 'LSTM', 'GRU']
-corpora = ['base', 'low', 'high']
-print("network,experiment,corpus,performance,open,closed,total,ratio")
-for experiment in experiments:
-	for corpus in corpora:
-		for network in networks:
-			count_error_types(fp, experiment, network, corpus, 'good')
-for experiment in experiments:
-	for corpus in corpora:
-		for network in networks:
-			count_error_types(fp, experiment, network, corpus, 'bad')
-
-#lstm_lrd = plot_results(fp, 'LRD', 'LSTM', 'bad')
-#plt.show()
-#srnn_lrd = plot_results(fp, 'LRD', 'SRNN', 'bad')
-#plt.show()
-
-# 1. Determine which networks qualify for closer scrutiny (best performers, worst performers)
-# Iterate through all detail files
-# corpora = ['base', 'high', 'low']
-# experiments = ['LRD', 'ND']
-# networks = ['SRNN', 'GRU', 'LSTM']
-# for corpus in corpora:
-	# for experiment in experiments:
-		# for network in networks:
-			# for hidden_units in [2**i for i in range(1,10)]:
-				# continue
-				# Appending precision, recall, f1_score to sparse_file
-				# detail_file = os.path.join('..', 'exp_results', corpus, experiment, 'detail_{}_{}.csv'.format(network, str(hidden_units)))
-				# sparse_file = os.path.join('..', 'exp_results', corpus, experiment, '{}_{}.csv'.format(network, str(hidden_units)))
-				# print(sparse_file)
-				# sparse = pd.read_csv(sparse_file)
-				# details = numbers_to_words(detail_file)
-				# print(details.describe())
-				# precision, recall, f1_score = measure_performance(details)
-				# sparse['precision'], sparse['recall'], sparse['f1_score'] = precision, recall, f1_score
-				# sparse.to_csv(sparse_file, index=False)
-
-				#prepend_header(detail_file)
-				
+create_mega_df()
+print_bracket_ratio_table()

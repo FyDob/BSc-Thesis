@@ -1,6 +1,6 @@
+# concat_results.py
 # Creates a .csv overview over all model performances.
-# Collecting acquired loss, accuracy values for RNN models on experiment data.
-# TODO: Include test_loss, test_val
+# Collecting calculated performance measures for all RNN models
 import os
 import pandas as pd
 
@@ -31,24 +31,31 @@ def read_checkpoint(ckpt_file):
 	
 	return epoch, train_loss, train_acc, val_loss, val_acc
 		
-
-# Collect all results across all corpora and experiments in a list of pd.DataFrames
 def create_results(corpora=CORPORA, experiments=EXPERIMENTS):
+	'''Collect all results across all corpora and experiments in a list of pd.DataFrames to create a dataframe containing all results. Used for data exploration and to create tables for the thesis.
+			args:
+				corpora: list of corpora to include in the big dataframe
+				experiments: list of experiments to include in the big dataframe
+			returns:
+				results: dataframe with all specified results'''
 	single_frames = []
 	for corpus in corpora:
 		for experiment in experiments:
 			directory = os.path.join('..', 'exp_results', corpus, experiment)
 			dirs = os.listdir(directory)
-			for filename in dirs:
-				if not filename.startswith('detail_'):
+			for filename in dirs: # Going through results for all hidden_units configurations
+				if not filename.startswith('detail_'): # Disregarding the detailed results
 					network, hidden_units = filename[:-4].split('_')
 					model_directory = os.path.join('..', 'saved_models', corpus, network, hidden_units)
 					models = os.listdir(model_directory)
 					ckpt = os.path.join(model_directory, models[0])
 					epoch, train_loss, train_acc, val_loss, val_acc = read_checkpoint(ckpt)
+					
 					df = pd.read_csv(os.path.join(directory, filename),delimiter=',')
 					df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
 					df = df.rename(str.lower, axis='columns')
+					
+					# Putting all measured values for this model together
 					df['val_acc'], df['val_loss'], df['train_acc'], df['train_loss'], df['epoch'], df['network'], df['experiment'], df['corpus'], df['hidden_units']  = val_acc, val_loss, train_acc, train_loss, epoch, network, experiment, corpus, hidden_units
 					col_order = ['network', 'hidden_units', 'corpus', 'experiment', 'accuracy', 'precision', 'recall', 'f1_score', 'epoch', 'train_acc', 'train_loss', 'val_acc', 'val_loss']
 					df = df[col_order]
@@ -60,16 +67,31 @@ def create_results(corpora=CORPORA, experiments=EXPERIMENTS):
 	return results
 	
 def save2file(dataframe, experiment, corpus, mode, outpath):
+	'''Saves a given dataframe as either a .csv or .tex table. Latex formatting was then manually modified.
+			args:
+				dataframe: dataframe containing measurements
+				experiment: string, name of the current experiment
+				corpus: string, name of the current corpus
+				mode: string, csv/latex, determines which file to generate
+				outpath: string, determines where the file is saved_models
+			returns:
+				none'''
 	try:
 		os.makedirs(outpath)
 	except:
 		print("Directory {} exists, proceeding.".format(outpath))
 	if mode=='csv':
 		dataframe.to_csv(os.path.join(outpath, 'results_{}_{}.csv'.format(experiment, corpus)), index=False)
-	elif mode=='latex':
+	elif mode=='latex': # Latex output has been used as a basis for tables in the thesis, heavy modifications were made
 		dataframe.to_latex(os.path.join(outpath, 'results_{}_{}.tex'.format(experiment, corpus)), columns=PERFORMANCE_COLUMNS, float_format='{:0.3f}'.format, index=False)
 
 def create_all_tables(df, mode):
+	'''Creates tables collecting all results given the supplied mode.
+			args:
+				df: dataframe containing measurements
+				mode: string, LRD/ND/SRNN/LSTM/GRU, determines what to filter the dataframe for
+			returns:
+				none'''
 	corpora = ['base', 'low', 'high']
 	measures = []
 	if mode in ('SRNN', 'LSTM', 'GRU'):

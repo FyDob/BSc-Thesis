@@ -1,6 +1,6 @@
-# TODO import base corpus from file to create shorter LRD/ND training batches (in total just len 22), IF THERE'S TIME
+# corpus_tools.py
 # Works with a base file of correct Dyck words to create
-# classification datasets with a 50/50 split on correct/incorrect words each.
+# Generates classification datasets with a 50/50 split on correct/incorrect words each from a basic sampling of correct Dyck(2) words.
 # Creates following datasets:
 #	TRAINING
 # 	- base
@@ -50,7 +50,7 @@ def maxNestingDepth(word):
 				word: string, Dyck word consisting of [, {, }, ] as brackets.
 			returns:
 				max_depth: int'''
-	# Remove EOW symbol when working with processed corpus.
+	# Remove EOW symbol when working with processed corpus
 	if word[-1] == '$':
 		word = word[:-1]
 
@@ -62,8 +62,7 @@ def maxNestingDepth(word):
 		else: # Any other character must be a closing bracket and thus reduce depth
 			depth -= 1
 		if depth < 0:
-			#print('Invalid Dyck word detected; negative nesting depth.\n{}'.format(word))
-			return -1 # Indicates a corrupted word with a superfluous closing bracket in analysis.
+			return -1 # Indicates a corrupted word with a superfluous closing bracket in analysis
 			
 		if depth > max_depth:
 			max_depth = depth
@@ -77,7 +76,7 @@ def maxValidNestingDepth(word):
 				word: string, Dyck word consisting of [, {, }, ] as brackets.
 			returns:
 				max_depth: int'''
-	# Remove EOW symbol when working with processed corpus.
+	# Remove EOW symbol when working with processed corpus
 	if word[-1] == '$':
 		word = word[:-1]
 
@@ -168,8 +167,7 @@ def bracketDistanceAtPosition(word, position):
 			word: string, Dyck word consisting of [, {, }, ] as brackets.
 			position: position: int, index for word.
 		returns:
-			distance: int, number of characters between word[position] and the corresponding opening bracket.'''
-		
+			distance: int, number of characters between word[position] and the corresponding opening bracket.'''	
 	distance = 0
 	stack = []
 	character = word[position]
@@ -218,7 +216,6 @@ def determineError(word):
 		return 'open'
 	else:
 		return 'none'
-
 
 def findErrorPosition(word):
 	'''Given a corrupted D_2 word, this function determines the position of the corrupted bracket.
@@ -313,7 +310,7 @@ def evaluateCorpus(corpus):
 		args:
 			corpus: 
 		returns:
-			(avg, var): 3 tuples of floats, average and variance for the respective measure.'''
+			3 x (avg, var): 3 tuples of floats, average and variance for the respective measure.'''
 	corpus = [entry[0][:-1] for entry in corpus if entry[1]] # Removing EOW
 	
 	return measureLength(corpus), measureMaxNestingDepth(corpus), measureMaxBracketDistance(corpus)
@@ -521,7 +518,7 @@ def create_corpus(data, type):
 	corpus_incorrect_open = corrupt_words(corpus_correct, 'open')
 	corpus_incorrect_closed = corrupt_words(corpus_correct, 'closed')
 	# Debug print
-	print(" === {} ===\nCorrect\tIncorrect O\tIncorrect C\n{}\t{}\t{}".format(type.upper(), len(data), len(corpus_incorrect_open), len(corpus_incorrect_closed)))
+	#print(" === {} ===\nCorrect\tIncorrect O\tIncorrect C\n{}\t{}\t{}".format(type.upper(), len(data), len(corpus_incorrect_open), len(corpus_incorrect_closed)))
 	corpus = data[:int(POSITIVE_RATIO*SIZE)] + corpus_incorrect_open[:int(NEGATIVE_RATIO/2.*SIZE)] + corpus_incorrect_closed[:int(NEGATIVE_RATIO/2.*SIZE)]
 	random.shuffle(corpus)
 	(avLen, varLen), (avMaxND, varMaxND), (avMaxBD, varMaxBD) = evaluateCorpus(corpus)
@@ -543,6 +540,11 @@ def save2file(outpath, corpus):
 		outfile.write('{},{}\n'.format(entry[0],entry[1]))
 
 def create_corpora():
+	'''Creates all datasets needed for the classification tasks from the input file.
+			args:
+				none
+			returns:
+				none'''
 	file = open(INPUT_PATH, 'r')
 	EOW = '$'
 	raw_text = file.read()
