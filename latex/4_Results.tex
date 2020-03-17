@@ -3,7 +3,7 @@
 \section{Results}\label{ch:results}
 During training, almost all $81$ trained models achieved a validation accuracy near $100\%$, except for the SRNN-2 models trained on the base and low LRD corpus, which scored $75.0\%$ and $50.4\%$ respectively. I have included them in the experiments regardless of their low validation accuracy, since it was unclear whether validation accuracy would be a strong predictor for a network's performance on the experiment data. I present my results with regard to three focus points: First, the overall performance of different architectures with respect to which corpus they were trained on, then the individual model performances on each of the two experiments, and finally a closer look at classifications made by outlier networks - networks which drastically over- or underperformed in either of the experiments - with regards to misclassified false positives.
 
-\subsection{Architecture/Training Data}
+\subsection{Architecture/Training Data}\label{results_ATD}
 \input{tab/results_compounded}
 As can be seen in Table \ref{tab:perf_all}, none of the architectures consistently achieved an accuracy far above the random guessing baseline of $50.0\%$. However, there was still a notable difference in performance between architectures: on average, the GRU networks scored the highest on accuracy and precision, while the SRNN networks achieved the best recall and F1 score. With $51.5\%$, LSTMs scored an average accuracy between SRNNs ($50.0\%$) and GRUs ($53.3\%$), but they underperformed in all other experiment measures.
 
@@ -38,7 +38,7 @@ The same number of Low LRD models performed above chance for Experiment 2 as for
 \input{tab/results_ND_high}
 While the highest number of High LRD models have achieved an accuracy above random guessing - $10$ of $27$, or $37.0\%$ - only SRNN-16 crossed the $60\%$ threshold at all. Indeed, aside from SRNN-16, only one other model lay outside of the $\pm 5\%$ margin around the baseline - LSTM-64, with an accuracy of $28.5\%$. When comparing with the Base models, all measures except for precision, which improved by $+10.7$ p.p. Accuracy went down by $-2.7$ p.p., recall by $-7.5$ and F1 score by $-5.0$ p.p.
 
-\subsection{Outliers: A Closer Look}
+\subsection{Outliers: A Closer Look}\label{results_outliers}
 As is evident from the results described so far, a vast majority of models fell within a $\pm 5\%$ margin around random guessing in terms of accuracy. I consider these models to not have extracted any useful grammar information from the training data and discard them for further investigation. As such, I will only discuss models with an accuracy either $> 55\%$ or $< 45\%$, to both gather information on what caused models to succeed, and what caused them to fail.
 
 \include{tab/openclose_ratio}
