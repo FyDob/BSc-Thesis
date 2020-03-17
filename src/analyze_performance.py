@@ -110,6 +110,13 @@ def prepare_dataframe(corpus, experiment, network, hidden_units, GLOBAL_WORDS):
 	return df
 
 def measure_performance(results):
+	'''Calculates precision, recall and F1 score of a dataframe containing predictions and gold labels.
+		args:
+			results: Dataframe containing predictions and gold labels
+		returns:
+			precision: TPs/(TPs+FPs)
+			recall: TPs/(TPs+FNs)
+			f1_score: 2*((precision*recall)/(precision+recall))'''
 	true_pos = len(results.loc[results.golds == 1].loc[results.predictions >= 0.5])
 	false_pos = len(results.loc[results.golds == 0].loc[results.predictions >= 0.5])
 	true_neg = len(results.loc[results.golds == 0].loc[results.predictions < 0.5])
@@ -128,6 +135,12 @@ def measure_performance(results):
 	return precision, recall, f1_score
 	
 def breakdownPredictions(df, corpus, experiment, network, hidden_units, performance):
+	'''Transforms a full dataframe of word-prediction-gold_label data into 4 dataframes specific to a single model: true positives, false positives, true negatives and false negatives.
+		args:
+			df: Complete dataframe of word-prediction-gold_labels
+			corpus, experiment, network, hidden_units, performance: Strings filtering the df for the specific model
+		returns:
+			true_positives, false_positives, true_negatives, false_negatives: Dataframes containing all TPs, FPs, TNs and FNs of a specific model'''
 	generals = pd.DataFrame()
 	generals['corpus'], generals['experiment'], generals['network'], generals['hidden_units'], generals['performance'] =  pd.Series(corpus), experiment, network, hidden_units, performance
 	# Determine all predictions in their own series to analyze.
@@ -150,6 +163,11 @@ def breakdownPredictions(df, corpus, experiment, network, hidden_units, performa
 	return true_positives, false_positives, true_negatives, false_negatives
 
 def prepend_header(detail_file):
+	'''Includes a descriptive header in a file containing individual words, predictions and their gold label.
+		args:
+			detail_file: Path to a file containing individual words, predictions and their gold label
+		returns:
+			none'''
 	f = open(detail_file,'r')
 	temp = f.read()
 	f.close()
@@ -159,11 +177,6 @@ def prepend_header(detail_file):
 
 	f.write(temp)
 	f.close()
-
-def print_to_console(corpus, experiment, network, hidden_units, performance, GLOBAL_WORDS):
-	print(",{} {} {} {}-{},".format(corpus, experiment, performance, network, hidden_units).upper())
-	details = prepare_dataframe(corpus, experiment, network, hidden_units, GLOBAL_WORDS)
-	breakdownPredictions(details, corpus, experiment, network, hidden_units)
 
 def create_mega_df():
 	global_words_LRD = numbers_to_words('base', 'LRD', 'LSTM', '8')
@@ -220,7 +233,7 @@ def create_mega_df():
 	mega_true_negatives.to_csv(tn_out)
 	mega_false_negatives.to_csv(fn_out)	
 
-#create_mega_df()
+create_mega_df()
 
 # DETAILLED
 # detail_file = os.path.join('..', 'exp_results', 'base', 'LRD', 'detail_{}_{}.csv'.format('LSTM', '8')) # 91% accuracy LRD
@@ -326,7 +339,7 @@ def count_error_types(fp, experiment, network, corpus, performance):
 		else:
 			ratio = np.inf
 		
-		print("{},{},{},{},{},{},{},{}".format(network, experiment, corpus, performance, open, closed, ratio, total))
+		print("{},{},{},{},{},{},{},{}".format(network, experiment, corpus.capitalize(), performance, open, closed, total, ratio))
 
 # PLOTTING
 # pred_lrd = plot_results(fp, 'LRD', 'Predictions', 'bad')
@@ -345,7 +358,7 @@ def count_error_types(fp, experiment, network, corpus, performance):
 experiments = ['LRD', 'ND']
 networks = ['SRNN', 'LSTM', 'GRU']
 corpora = ['base', 'low', 'high']
-print(",,,,open,closed,ratio,total")
+print("network,experiment,corpus,performance,open,closed,total,ratio")
 for experiment in experiments:
 	for corpus in corpora:
 		for network in networks:
