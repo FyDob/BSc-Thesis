@@ -1,7 +1,7 @@
 %TODO talk about 0.0 F1 score models
 %TODO introduce the +/- 5% corridor in the first paragraph to disregard the insignificant results.
 \section{Results}\label{ch:results}
-During training, almost all $81$ trained models achieved a validation accuracy significantly above random guessing, except for the SRNN-2 models trained on the base and low LRD corpus, which scored $75.0\%$ and $50.4\%$ respectively. I have included them in the experiments regardless of their low validation accuracy, since it was unclear whether validation accuracy was a strong predictor for a network's performance on the experiment data. I present my results with regard to three focus points: First, the overall performance of different architectures with respect to which corpus they were trained on, then the individual model performances on each of the two experiments, and finally a closer look at classifications made by outlier networks - networks which drastically over- or underperformed in either of the experiments - with regards to word features.
+During training, almost all $81$ trained models achieved a validation accuracy near $100\%$, except for the SRNN-2 models trained on the base and low LRD corpus, which scored $75.0\%$ and $50.4\%$ respectively. I have included them in the experiments regardless of their low validation accuracy, since it was unclear whether validation accuracy would be a strong predictor for a network's performance on the experiment data. I present my results with regard to three focus points: First, the overall performance of different architectures with respect to which corpus they were trained on, then the individual model performances on each of the two experiments, and finally a closer look at classifications made by outlier networks - networks which drastically over- or underperformed in either of the experiments - with regards to misclassified false positives.
 
 \subsection{Architecture/Training Data}
 \input{tab/results_compounded}
@@ -47,29 +47,29 @@ First, I report the number of the two error categories (superfluous open bracket
 
 Wrong words with superfluous open brackets have shown to be the most difficult to reject: $61.54\%$ of the High Accuracy Models and $80\%$ of the Low Accuracy Models skew towards a ratio $> 1$. Furthermore, a model's inability to treat both error categories the same as indicated by the ratio correlates to model accuracy: will most High Accuracy Models err reasonably closely to $1$, the Low Accuracy Models show a much more extreme distribution, frequently misclassifying almost all words in one error category, while handling the other one perfectly. There is no trend towards one architecture overall skewing towards $1$. However, among the High Accuracy Models, the models trained on the Low LRD corpus have the lowest deviation from $1$, with $0.256$ on Experiment 1, and $0.652$ on Experiment 2. The lowest deviation from $1$ among the Low Accuracy Models comes from the models trained on the Base corpus, with $25.65$ and $9.382$, respectively.
 
-To investigate properties of wrongly classified words, I scrutinize false positives for two word properties. I chose the properties as proxy values for word complexity: the maximum nesting depth of the word, and the position of the error within the word. Since all words within an experiment have the same length, variation in complexity can only arise through structural differences - like a deeper underlying parse tree. The values were averaged across all model instances with the same architecture and training corpus for reasons of simplicity, i.e. the results of both good base GRU outliers in Experiment 1 were merged. A low value in mean error position means that the model tended to misclassify words where the error occured early on in the word, while a high value means that the error occured later. Maximum nesting depth is an overall measure of complexity for the word, and refers to the deepest nesting level within the word. It is unrelated to the error position. Again, a low value means that the model predominantly misclassified words with a low nesting depth.
+%To investigate properties of wrongly classified words, I scrutinize false positives for two word properties. I chose the properties as proxy values for word complexity: the maximum nesting depth of the word, and the position of the error within the word. Since all words within an experiment have the same length, variation in complexity can only arise through structural differences - like a deeper underlying parse tree. The values were averaged across all model instances with the same architecture and training corpus for reasons of simplicity, i.e. the results of both good base GRU outliers in Experiment 1 were merged. A low value in mean error position means that the model tended to misclassify words where the error occured early on in the word, while a high value means that the error occured later. Maximum nesting depth is an overall measure of complexity for the word, and refers to the deepest nesting level within the word. It is unrelated to the error position. Again, a low value means that the model predominantly misclassified words with a low nesting depth.
 
-\begin{figure}[!tbp]
-	\begin{minipage}{\textwidth}
-     \centering
-     \includegraphics[width=.45\textwidth]{fig/LRD_error_pos_good}\quad
-     \includegraphics[width=.45\textwidth]{fig/LRD_error_pos_bad}\\
-     \includegraphics[width=.45\textwidth]{fig/LRD_max_valid_nesting_depth_good}\quad
-     \includegraphics[width=.45\textwidth]{fig/LRD_max_valid_nesting_depth_bad}
-     \subcaption{Properties of false positives in Experiment 1.}
-     \label{fig:FP_Prop_LRD}
-   \end{minipage}\\[1em]
-   \begin{minipage}{\textwidth}
-     \centering
-     \includegraphics[width=.45\textwidth]{fig/ND_error_pos_good}\quad
-     \includegraphics[width=.45\textwidth]{fig/ND_error_pos_bad}\\
-     \includegraphics[width=.45\textwidth]{fig/ND_max_valid_nesting_depth_good}\quad
-     \includegraphics[width=.45\textwidth]{fig/ND_max_valid_nesting_depth_bad}
-     \subcaption{Properties of false positives in Experiment 2.}
-     \label{fig:FP_Prop_ND}
-   \end{minipage}\\
-  \caption{Properties of false positives as classified by different architectures. A missing architecture/training corpus combination means that none of these models scored an accuracy outside of $50 \pm  5\%$, and were not included in this analysis.}
-\end{figure}
+%\begin{figure}[!tbp]
+%	\begin{minipage}{\textwidth}
+%     \centering
+%     \includegraphics[width=.45\textwidth]{fig/LRD_error_pos_good}\quad
+%     \includegraphics[width=.45\textwidth]{fig/LRD_error_pos_bad}\\
+%     \includegraphics[width=.45\textwidth]{fig/LRD_max_valid_nesting_depth_good}\quad
+%     \includegraphics[width=.45\textwidth]{fig/LRD_max_valid_nesting_depth_bad}
+%     \subcaption{Properties of false positives in Experiment 1.}
+%     \label{fig:FP_Prop_LRD}
+%   \end{minipage}\\[1em]
+%   \begin{minipage}{\textwidth}
+%     \centering
+%     \includegraphics[width=.45\textwidth]{fig/ND_error_pos_good}\quad
+%     \includegraphics[width=.45\textwidth]{fig/ND_error_pos_bad}\\
+%     \includegraphics[width=.45\textwidth]{fig/ND_max_valid_nesting_depth_good}\quad
+%     \includegraphics[width=.45\textwidth]{fig/ND_max_valid_nesting_depth_bad}
+%     \subcaption{Properties of false positives in Experiment 2.}
+%     \label{fig:FP_Prop_ND}
+%   \end{minipage}\\
+%  \caption{Properties of false positives as classified by different architectures. A missing architecture/training corpus combination means that none of these models scored an accuracy outside of $50 \pm  5\%$, and were not included in this analysis.}
+%\end{figure}
 %TODO rename XY Performance to Average XY for Good/Bad Outliers in
 % - figures
 % - text
@@ -79,11 +79,11 @@ To investigate properties of wrongly classified words, I scrutinize false positi
 % - text
 %TODO confusion matrix?
 
-As can be seen in Figure \ref{fig:FP_Prop_LRD}, there is a notable difference in average error position, not just between High and Low Accuracy models, but also between architectures and training corpora. The value tends to be highest for models trained on the High LRD corpus, followed by models trained on the Low LRD corpus. The highest accuracy model for Experiment 1 was Base LSTM-8 with an accuracy of $91.00\%$. This model misclassified words with the earliest error occurrence, setting in at $4.417$. For Maximum Nesting Depth, there is no significant difference between training corpus and models, save for a massive spike for Base LSTM-8. Comparing High and Low Accuracy models shows mostly lower Average Error Position values, with the GRU models being notable exemptions to the rule. Low Accuracy models tend to misclassify more complex words.
-
-For Experiment 2, Figure \ref{fig:FP_Prop_ND} shows stark differences in Average Error Position depending on the training corpus. All models trained on the Low LRD corpus misclassify words with a higher Average Error Position than models trained on the Base corpus. As in Experiment 1, the best performing model (Base LSTM-128) scores the lowest Average Error Position and the highest Average Nesting Depth. Comparing High and Low Accuracy models, the Low Accuracy models achieve drastically lower Average Error Positions and slightly lower Average Maximum Nesting Depth.
-
-These values provide little conclusive insight into what properties characterize a successful model. However, they do illustrate an overall altered performance depending on which corpus the model was trained on, indicating that the complexity of the input data has an impact on how the model evaluates unseen, more complex data.
+%As can be seen in Figure \ref{fig:FP_Prop_LRD}, there is a notable difference in average error position, not just between High and Low Accuracy models, but also between architectures and training corpora. The value tends to be highest for models trained on the High LRD corpus, followed by models trained on the Low LRD corpus. The highest accuracy model for Experiment 1 was Base LSTM-8 with an accuracy of $91.00\%$. This model misclassified words with the earliest error occurrence, setting in at $4.417$. For Maximum Nesting Depth, there is no significant difference between training corpus and models, save for a massive spike for Base LSTM-8. Comparing High and Low Accuracy models shows mostly lower Average Error Position values, with the GRU models being notable exemptions to the rule. Low Accuracy models tend to misclassify more complex words.
+%
+%For Experiment 2, Figure \ref{fig:FP_Prop_ND} shows stark differences in Average Error Position depending on the training corpus. All models trained on the Low LRD corpus misclassify words with a higher Average Error Position than models trained on the Base corpus. As in Experiment 1, the best performing model (Base LSTM-128) scores the lowest Average Error Position and the highest Average Nesting Depth. Comparing High and Low Accuracy models, the Low Accuracy models achieve drastically lower Average Error Positions and slightly lower Average Maximum Nesting Depth.
+%
+%These values provide little conclusive insight into what properties characterize a successful model. However, they do illustrate an overall altered performance depending on which corpus the model was trained on, indicating that the complexity of the input data has an impact on how the model evaluates unseen, more complex data.
 
 % THIS GOES IN DISCUSSION
 %While all these words were misclassified, a strong effect of word complexity still implies that the models process the linear input in a structural manner. They may not have learned an accurate representation of $D_{2}$, but they are likely to have learned a structured approximation.
