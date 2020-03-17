@@ -1,3 +1,10 @@
 \subsection*{Appendix}\label{appendix}
-%TODO Proof: regular languages closed under intersection
-%TODO Proof: E' not regular
+\lstinputlisting[caption={[generate\_raw\_data.py]Script to generate the base data from which the corpora are built. Sampling is done according to \cite{Sennhauser2018}.}]{../src/generate_raw_data.py}
+\newpage
+\lstinputlisting[caption={[corpus\_tools.py]Collection of functions to measure corpus and word properties. Used to generate five classification datasets: three different training sets and the two experiment sets.}]{../src/corpus_tools.py}
+\newpage
+\lstinputlisting[caption={[RNN\_classifier.py]Preprocessing input data, creating and training of RNN models. The trained models are then loaded to classify experiment data.}]{../src/RNN_classifier.py}
+\newpage
+\lstinputlisting[caption={[concat\_results.py]Script to create the basis of the tables featured in Section \ref{results_ATD}.}]{../src/concat_results.py}
+\newpage
+\lstinputlisting[caption={[analyze\_performance.py]Script to create the basis of the tables featured in Section \ref{results_outliers}.}]{../src/analyze_performance.py}
